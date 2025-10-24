@@ -5,6 +5,6 @@
 //  Created by Sing Hui Hang on 24/10/25.
 //
 
-struct Document{
+struct ProcessedDocument{
     //TODO: Fill in document fields
 }

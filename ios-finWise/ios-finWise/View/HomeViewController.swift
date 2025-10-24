@@ -6,14 +6,20 @@
 //
 
 import UIKit
+import UniformTypeIdentifiers
 
-class HomeViewController: UIViewController{
+
+class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIDocumentPickerDelegate{
     
     //Dummy data
     let user = User(name: "Alex")
+    
     let stack = UIStackView()
-    var documents: [Document] = []
+    
+    
+    var processedDocs: [ProcessedDocument] = []
     var selectMenu = UIMenu()
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,8 +31,9 @@ class HomeViewController: UIViewController{
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "plus"),
             menu: UIMenu(children:[
-                UIAction(title:"Camera", image: UIImage(systemName: "camera")){ _ in self.testCamera()},
-                UIAction(title:"Upload Docs",image: UIImage(systemName: "filemenu.and.pointer.arrow")){_ in self.testCamera()}
+                UIAction(title:"Camera", image: UIImage(systemName: "camera")){ _ in self.uploadByCamera()},
+                
+                UIAction(title:"Upload Docs",image: UIImage(systemName: "filemenu.and.pointer.arrow")){_ in self.uploadByFile()}
             ])
         )
         
@@ -44,12 +51,29 @@ class HomeViewController: UIViewController{
         
     }
     
-    @objc func testCamera(){
-        print("test function")
+    @objc func uploadByCamera(){
+        //Open up camera in iphone
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .camera
+        imagePicker.allowsEditing = true
+        imagePicker.delegate = self
+        
+        present(imagePicker, animated: true,completion: nil)
+        
+        //If user exits without taking picture - we guide them back here, else we bring them to the preview page
+        
+
     }
     
-    @objc func addNewDocumentTapped(){
-        //Configure UIMenu
+    @objc func uploadByFile(){
+        //Open up file folder within iphone
+        //Prepare document picker
+        let supportedTypes: [UTType] = [.pdf, .text]
+        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
+        documentPicker.delegate = self
+        self.present(documentPicker, animated: true, completion: nil)
+        
+        
         
     }
     
@@ -77,7 +101,6 @@ class HomeViewController: UIViewController{
     
     private func setupLayout(){
         NSLayoutConstraint.activate([
-            
             stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             stack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
