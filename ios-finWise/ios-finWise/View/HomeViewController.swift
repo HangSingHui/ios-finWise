@@ -16,10 +16,9 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     
     let stack = UIStackView()
     
-    
     var processedDocs: [ProcessedDocument] = []
     var selectMenu = UIMenu()
-    
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,6 +40,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         self.tabBarItem = UITabBarItem(title: "Files", image: UIImage(systemName: "folder"), tag: 0)
         
         setupBackground()
+        setupTableView()
         setupUI()
         setupLayout()
     }
@@ -77,6 +77,69 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         
     }
     
+    private func setupTableView(){
+        
+        if processedDocs.count == 0{
+            
+            setupEmptyState()
+    
+        }
+            
+        else{
+            //Display table view
+        }
+        
+ 
+    }
+    
+    private func setupEmptyState(){
+        //Display default message
+        let emptyDefaultTitle = "You don't have any analysis yet."
+        let emptyDefaultSubTitle = "Get started with finWise by adding a document today!"
+        
+        //Create a stack view
+        let defaultMessageStack = UIStackView()
+        defaultMessageStack.axis = .vertical
+        defaultMessageStack.alignment = .center
+        defaultMessageStack.spacing = 15
+        
+        //Configure document image
+        let emptyIconView = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 80, weight: .medium)
+        emptyIconView.image = UIImage(systemName: "document.badge.plus", withConfiguration: config)
+        emptyIconView.tintColor = .secondaryLabel
+        emptyIconView.alpha = 0.3
+        defaultMessageStack.addArrangedSubview(emptyIconView)
+        
+        //Connfigure title label
+        let emptyTitleLabel = UILabel()
+        emptyTitleLabel.text = emptyDefaultTitle
+        emptyTitleLabel.textAlignment = .center
+        emptyTitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        emptyTitleLabel.alpha = 0.8
+        defaultMessageStack.addArrangedSubview(emptyTitleLabel)
+        
+        //Configure subtitle label
+        let emptySubtitleLabel = UILabel()
+        emptySubtitleLabel.text = emptyDefaultSubTitle
+        emptySubtitleLabel.textAlignment = .left
+        emptySubtitleLabel.textColor = .secondaryLabel
+        emptySubtitleLabel.font = UIFont.systemFont(ofSize: 14)
+        emptySubtitleLabel.numberOfLines = 0
+        emptySubtitleLabel.alpha = 0.7
+        defaultMessageStack.addArrangedSubview(emptySubtitleLabel)
+       
+        view.addSubview(defaultMessageStack)
+        defaultMessageStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+               defaultMessageStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+               defaultMessageStack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+               defaultMessageStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+               defaultMessageStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20)
+           ])
+    }
+    
     private func setupBackground(){
         //TODO: Understand what this code means
         let gradientView = GradientView()
@@ -85,6 +148,8 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         
         gradientView.setupGradient()
         view.insertSubview(gradientView, at: 0)
+        
+        
         
     }
     
