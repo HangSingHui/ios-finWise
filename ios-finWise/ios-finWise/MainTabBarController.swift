@@ -17,6 +17,7 @@ class MainTabBarController: UITabBarController{
         let settingsVC = SettingsViewController()
         
         //Icons
+
         homeVC.tabBarItem = UITabBarItem(title: "Files", image: UIImage(systemName: "folder"), tag: 0)
         settingsVC.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gearshape"), tag: 1)
         
