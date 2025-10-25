@@ -63,7 +63,6 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     }
     
     private func setupImageAndDocumentPickers(){
-        
         //Setup image picker
         imagePicker = UIImagePickerController()
         imagePicker.sourceType = .camera
@@ -81,7 +80,6 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         guard let image = info[.originalImage] as? UIImage else{
-            print("No image taken")
             return
         }
         

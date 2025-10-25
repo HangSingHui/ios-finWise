@@ -4,11 +4,10 @@
 //
 //  Created by Sing Hui Hang on 24/10/25.
 //
-
 import UIKit
 
 class GradientView: UIView {
-    private var decorativeShapes: [CAShapeLayer] = []
+    private var decorativeShapes: [CALayer] = []
     
     override class var layerClass: AnyClass {
         return CAGradientLayer.self
@@ -23,7 +22,7 @@ class GradientView: UIView {
             UIColor.white.cgColor,
             UIColor(red: 0.85, green: 0.88, blue: 0.98, alpha: 1.0).cgColor
         ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
         
         addDecorativeShapes()
@@ -34,8 +33,8 @@ class GradientView: UIView {
         decorativeShapes.forEach { shape in
             let animation = CABasicAnimation(keyPath: "transform.translation.y")
             animation.fromValue = 0
-            animation.toValue = 20
-            animation.duration = 4.0
+            animation.toValue = 50
+            animation.duration = 3.0
             animation.autoreverses = true
             animation.repeatCount = .infinity
             animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -44,43 +43,43 @@ class GradientView: UIView {
     }
     
     private func addDecorativeShapes() {
-        // Clear existing shapes
         decorativeShapes.forEach { $0.removeFromSuperlayer() }
         decorativeShapes.removeAll()
         
-        // Top left rounded rectangle
-        let topLeftShape = createRoundedRectangle(
-            size: CGSize(width: 150, height: 150),
-            cornerRadius: 30
+        // Top left shape - subtle
+        addShape(
+            size: CGSize(width: 120, height: 120),
+            position: CGPoint(x: 40, y: 180),
+            cornerRadius: 30,
+            rotation: 20,
+            color: UIColor(red: 0.75, green: 0.8, blue: 0.95, alpha: 0.25)
         )
-        topLeftShape.frame.origin = CGPoint(x: -50, y: 500)
-        topLeftShape.transform = CATransform3DMakeRotation(.pi / 6, 0, 0, 1)
-        layer.addSublayer(topLeftShape)
-        decorativeShapes.append(topLeftShape)
         
-        // Bottom right rounded rectangle
-        let bottomRightShape = createRoundedRectangle(
-            size: CGSize(width: 200, height: 200),
-            cornerRadius: 40
+        // Bottom right shape - more visible
+        addShape(
+            size: CGSize(width: 160, height: 160),
+            position: CGPoint(x: bounds.width - 60, y: bounds.height - 180),
+            cornerRadius: 40,
+            rotation: -15,
+            color: UIColor(red: 0.7, green: 0.75, blue: 0.9, alpha: 0.3)
         )
-        bottomRightShape.frame.origin = CGPoint(x: bounds.width - 100, y: bounds.height - 250)
-        bottomRightShape.transform = CATransform3DMakeRotation(-.pi / 8, 0, 0, 1)
-        layer.addSublayer(bottomRightShape)
-        decorativeShapes.append(bottomRightShape)
     }
     
-    private func createRoundedRectangle(size: CGSize, cornerRadius: CGFloat) -> CAShapeLayer {
-        let shape = CAShapeLayer()
+    private func addShape(size: CGSize, position: CGPoint, cornerRadius: CGFloat, rotation: CGFloat, color: UIColor) {
+        let shapeLayer = CAShapeLayer()
         let path = UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: cornerRadius)
-        shape.path = path.cgPath
-        shape.fillColor = UIColor(white: 1.0, alpha: 0.3).cgColor
-        shape.bounds = CGRect(origin: .zero, size: size)
-        return shape
+        shapeLayer.path = path.cgPath
+        shapeLayer.fillColor = color.cgColor
+        shapeLayer.bounds = CGRect(origin: .zero, size: size)
+        shapeLayer.position = position
+        shapeLayer.transform = CATransform3DMakeRotation(rotation * .pi / 180, 0, 0, 1)
+        
+        layer.insertSublayer(shapeLayer, at: 1)
+        decorativeShapes.append(shapeLayer)
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Recreate shapes when view size changes
         if !decorativeShapes.isEmpty {
             addDecorativeShapes()
             animateShapes()
@@ -88,4 +87,6 @@ class GradientView: UIView {
     }
 }
 
-
+#Preview{
+    GradientView()
+}
