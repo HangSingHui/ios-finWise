@@ -15,11 +15,7 @@ extension PreprocessingViewControlerDelegate {
     func didAddPhoto(_ photo: UIImage){}
 }
 
-
-class PreprocessingViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate,  UIImagePickerControllerDelegate, UINavigationControllerDelegate{
-    
-    //This will be created the moment a photo is taken - so use that to intialise this raw document object
-    //Create a RawDocument object
+class PreprocessingViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
     
     
     var pageImages: [UIImage] = []
@@ -58,6 +54,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
             action: #selector(handleGenerate)
         )
         
+        
         //Configure editable text field
         setupEditableTextField()
         
@@ -70,12 +67,12 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         collectionView.register(RawDocumentGridViewCell.self, forCellWithReuseIdentifier: RawDocumentGridViewCell.identifier)
        collectionView.register(AddMoreViewCell.self, forCellWithReuseIdentifier: AddMoreViewCell.identifier)
         
-        //Setup long press delete functionality
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
-        collectionView.addGestureRecognizer(longPress)
+        //Setup drag to reorder cells
+        collectionView.dropDelegate = self
+        collectionView.dragDelegate = self
+        collectionView.dragInteractionEnabled = true
         
         setupLayout()
-    
     }
     
 
@@ -192,22 +189,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     @objc func handleGenerate(){
         
     }
-    
-    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer){
-        guard gesture.state == .began else { return }
-        let point = gesture.location(in: collectionView)
-        guard let indexPath = collectionView.indexPathForItem(at: point), indexPath.item < pageImages.count else { return }
-        
-        showActionMenu(for: indexPath)
-        
-    }
-    
-    private func showActionMenu(for indexPath:IndexPath){
-        let alert = UIAlertController(title: "Page \(indexPath.item + 1)", message:nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title:"Delete", style: .destructive) { _ in self.deletePage(at: indexPath)})
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
-    }
+   
     
     private func deletePage(at indexPath: IndexPath){
         if indexPath.item >= pageImages.count{
@@ -224,6 +206,22 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
             })
     }
     
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        guard indexPath.item < pageImages.count else { return nil }
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            let deleteAction = UIAction(
+                title: "Delete",
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { _ in
+                self.deletePage(at: indexPath)
+            }
+            
+            return UIMenu(title: "Page \(indexPath.item + 1)", children: [deleteAction])
+        }
+    }
     
     
     private func addMorePhotos(){
@@ -247,8 +245,57 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         pageImages.append(image)
         collectionView.reloadData()
     }
-
     
+    // MARK: - UICollectionViewDragDelegate
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        // Don't allow dragging the "Add More" cell
+        guard indexPath.item < pageImages.count else { return [] }
+        
+        let item = pageImages[indexPath.item]
+        let itemProvider = NSItemProvider(object: item)
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        dragItem.localObject = item
+        
+        return [dragItem]
+    }
+
+    // MARK: - UICollectionViewDropDelegate
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        // Only allow reordering within the collection view
+        guard collectionView.hasActiveDrag else {
+            return UICollectionViewDropProposal(operation: .forbidden)
+        }
+        
+        // Don't allow dropping on the "Add More" cell
+        if let destinationIndexPath = destinationIndexPath, destinationIndexPath.item >= pageImages.count {
+            return UICollectionViewDropProposal(operation: .forbidden)
+        }
+        
+        return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
+        guard let destinationIndexPath = coordinator.destinationIndexPath,
+              destinationIndexPath.item < pageImages.count else { return }
+        
+        coordinator.items.forEach { dropItem in
+            guard let sourceIndexPath = dropItem.sourceIndexPath else { return }
+            
+            collectionView.performBatchUpdates({
+                let image = pageImages.remove(at: sourceIndexPath.item)
+                pageImages.insert(image, at: destinationIndexPath.item)
+                
+                collectionView.deleteItems(at: [sourceIndexPath])
+                collectionView.insertItems(at: [destinationIndexPath])
+            }, completion: { _ in
+                // Reload visible cells to update labels after reordering
+                let visibleIndexPaths = self.collectionView.indexPathsForVisibleItems.filter { $0.item < self.pageImages.count }
+                self.collectionView.reloadItems(at: visibleIndexPaths)
+            })
+            
+            coordinator.drop(dropItem.dragItem, toItemAt: destinationIndexPath)
+        }
+    }
   
     
 }
