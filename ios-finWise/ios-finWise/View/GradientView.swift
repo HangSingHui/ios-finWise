@@ -48,7 +48,7 @@ class GradientView: UIView {
         
         // Top left shape - subtle
         addShape(
-            size: CGSize(width: 120, height: 120),
+            size: CGSize(width: 200, height: 120),
             position: CGPoint(x: 40, y: 180),
             cornerRadius: 30,
             rotation: 20,
@@ -57,7 +57,7 @@ class GradientView: UIView {
         
         // Bottom right shape - more visible
         addShape(
-            size: CGSize(width: 160, height: 160),
+            size: CGSize(width: 250, height: 180),
             position: CGPoint(x: bounds.width - 60, y: bounds.height - 180),
             cornerRadius: 40,
             rotation: -15,
