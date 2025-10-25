@@ -26,7 +26,6 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     var rawDocument: RawDocument!
     var collectionView: UICollectionView!
     var titleLabel: UITextField!
-    
 
     
     init(documentImage: UIImage){
@@ -62,7 +61,6 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         //Configure editable text field
         setupEditableTextField()
         
-        
         //Configure collection view
         collectionView = UICollectionView(frame:.zero, collectionViewLayout: generateLayout())
         collectionView.delegate = self
@@ -72,11 +70,15 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         collectionView.register(RawDocumentGridViewCell.self, forCellWithReuseIdentifier: RawDocumentGridViewCell.identifier)
        collectionView.register(AddMoreViewCell.self, forCellWithReuseIdentifier: AddMoreViewCell.identifier)
         
+        //Setup long press delete functionality
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
+        collectionView.addGestureRecognizer(longPress)
+        
         setupLayout()
     
     }
     
-   
+
    
     private func generateLayout() -> UICollectionViewLayout{
         // Each item takes half the width (2 columns)
@@ -191,24 +193,49 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         
     }
     
-    private func addMorePhotos(){
-        print("add more photos function tapped")
-        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            let imagePicker = UIImagePickerController()
-            imagePicker.sourceType = .camera
-            imagePicker.allowsEditing = false
-            imagePicker.delegate = self
-            present(imagePicker, animated: true, completion: nil)
-        } else {
-            let imagePicker = UIImagePickerController()
-            imagePicker.sourceType = .photoLibrary
-            imagePicker.allowsEditing = false
-            imagePicker.delegate = self
-            present(imagePicker, animated: true, completion: nil)
-        }
+    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer){
+        guard gesture.state == .began else { return }
+        let point = gesture.location(in: collectionView)
+        guard let indexPath = collectionView.indexPathForItem(at: point), indexPath.item < pageImages.count else { return }
+        
+        showActionMenu(for: indexPath)
+        
     }
     
-    //Handle once image is picked, go back to this, refresh and append
+    private func showActionMenu(for indexPath:IndexPath){
+        let alert = UIAlertController(title: "Page \(indexPath.item + 1)", message:nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title:"Delete", style: .destructive) { _ in self.deletePage(at: indexPath)})
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func deletePage(at indexPath: IndexPath){
+        if indexPath.item >= pageImages.count{
+            return
+        }
+        //Remove indexPath.item from the array and rearrange
+        pageImages.remove(at: indexPath.item)
+        
+        collectionView.performBatchUpdates({
+                collectionView.deleteItems(at: [indexPath])
+            }, completion: { _ in
+                // Reload all visible cells to update their labels
+                self.collectionView.reloadItems(at: self.collectionView.indexPathsForVisibleItems.filter { $0.item < self.pageImages.count })
+            })
+    }
+    
+    
+    
+    private func addMorePhotos(){
+        print("add more photos function tapped")
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .camera
+        imagePicker.allowsEditing = false
+        imagePicker.delegate = self
+        present(imagePicker, animated: true, completion: nil)
+
+    }
+    
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
@@ -217,11 +244,12 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
             return
         }
         
-        //Append image to the pageImages
         pageImages.append(image)
         collectionView.reloadData()
     }
 
+    
+  
     
 }
 
