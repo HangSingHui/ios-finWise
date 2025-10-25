@@ -54,6 +54,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
             action: #selector(handleGenerate)
         )
         
+        
         //Configure editable text field
         setupEditableTextField()
         
@@ -72,9 +73,6 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         collectionView.dragInteractionEnabled = true
         
         setupLayout()
-        
-       
-    
     }
     
 

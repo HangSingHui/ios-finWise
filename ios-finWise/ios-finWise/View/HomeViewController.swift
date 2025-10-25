@@ -99,19 +99,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         }
         navController.isModalInPresentation = true
         present(navController, animated: true)
-    
-        
-        
-//        print(image.size)
-//        print(type(of: image))
-//        print(image)
-        
-        
-        /*
-         (3024.0, 4032.0)
-         UIImage
-         <UIImage:0x11247a120 anonymous {3024, 4032} renderingMode=automatic(original)>
-         */
+
         
     }
     
