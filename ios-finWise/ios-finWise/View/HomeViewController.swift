@@ -15,9 +15,13 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     let user = User(name: "Alex")
     
     let stack = UIStackView()
+    var imagePicker: UIImagePickerController!
+    var documentPicker: UIDocumentPickerViewController!
+    
     
     var processedDocs: [ProcessedDocument] = []
     var selectMenu = UIMenu()
+    
 
 
     override func viewDidLoad() {
@@ -40,6 +44,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         self.tabBarItem = UITabBarItem(title: "Files", image: UIImage(systemName: "folder"), tag: 0)
         
         setupBackground()
+        setupImageAndDocumentPickers()
         setupTableView()
         setupUI()
         setupLayout()
@@ -52,37 +57,75 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     }
     
     @objc func uploadByCamera(){
-        //Open up camera in iphone
-        let imagePicker = UIImagePickerController()
+    
+        present(imagePicker, animated: true,completion: nil)
+
+    }
+    
+    private func setupImageAndDocumentPickers(){
+        
+        //Setup image picker
+        imagePicker = UIImagePickerController()
         imagePicker.sourceType = .camera
-        imagePicker.allowsEditing = true
+        imagePicker.allowsEditing = false
         imagePicker.delegate = self
         
-        present(imagePicker, animated: true,completion: nil)
+        //Setup document picker
+        let supportedTypes: [UTType] = [.pdf, .text]
+        documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
+        documentPicker.delegate = self
         
-        //If user exits without taking picture - we guide them back here, else we bring them to the preview page
         
-
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        guard let image = info[.originalImage] as? UIImage else{
+            print("No image taken")
+            return
+        }
+        
+        //Push the view controller
+        let previewVC = PreprocessingViewController(documentImage: image)
+        let navController = UINavigationController(rootViewController: previewVC)
+       
+        navController.modalPresentationStyle = .pageSheet
+        if let sheet = navController.sheetPresentationController {
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.largestUndimmedDetentIdentifier = .medium
+            
+        }
+        navController.isModalInPresentation = true
+        present(navController, animated: true)
+    
+        
+        
+//        print(image.size)
+//        print(type(of: image))
+//        print(image)
+        
+        
+        /*
+         (3024.0, 4032.0)
+         UIImage
+         <UIImage:0x11247a120 anonymous {3024, 4032} renderingMode=automatic(original)>
+         */
+        
     }
     
     @objc func uploadByFile(){
         //Open up file folder within iphone
         //Prepare document picker
-        let supportedTypes: [UTType] = [.pdf, .text]
-        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
-        documentPicker.delegate = self
         self.present(documentPicker, animated: true, completion: nil)
-        
-        
         
     }
     
     private func setupTableView(){
         
         if processedDocs.count == 0{
-            
             setupEmptyState()
-    
         }
             
         else{
@@ -149,8 +192,6 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         gradientView.setupGradient()
         view.insertSubview(gradientView, at: 0)
         
-        
-        
     }
     
     private func setupUI(){
@@ -160,8 +201,6 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         stack.spacing = 20
         view.addSubview(stack)
         stack.translatesAutoresizingMaskIntoConstraints = false
-    
-        
     }
     
     private func setupLayout(){
@@ -171,12 +210,12 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
             stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             
-         
         ])
     }
     
     
 }
+
 
 #Preview {
     MainTabBarController()

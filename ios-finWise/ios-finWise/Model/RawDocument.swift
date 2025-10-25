@@ -5,6 +5,11 @@
 //  Created by Sing Hui Hang on 24/10/25.
 //
 
-class RawDocument{
+import UIKit
+
+struct RawDocument{
+    let documentTitle: String
+    let images: [UIImage]
     
 }
+
