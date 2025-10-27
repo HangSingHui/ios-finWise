@@ -11,13 +11,20 @@ import UIKit
 
 class AnalyserService{
     
+    private var imagesToProcess: [UIImage]
+    
     // 1. Initialise OPENAI api
     init(documentImages: [UIImage]){
+        
+        imagesToProcess = documentImages
+        
         guard let key = ProcessInfo.processInfo.environment["OPENAI_API_KEY"], !key.isEmpty else {
             fatalError("Missing OPENAI_API_KEY")
         }
         let configuration = OpenAI.Configuration(token: key)
         self.openAI = OpenAI(configuration: configuration)
+        
+        prepareSystemPrompt()
     }
     
     private let openAI: OpenAI
@@ -40,6 +47,7 @@ class AnalyserService{
     
     //Prepare query
     func respond(to text:String) async throws -> String{
+    
         let query = ChatQuery(
             messages: [.system(.init(content: .textContent(systemPrompt))),
                       .user(.init(content: .string(text)))],
@@ -49,12 +57,8 @@ class AnalyserService{
         let result = try await openAI.chats(query: query)
         let response = result.choices.first?.message.content ?? ""
         
-        //Prepare response and send to view controller
-        
         return response
 
     }
-    
-    
     
 }
