@@ -187,7 +187,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     }
     
     @objc func handleGenerate(){
-        
+        //Perform preliminary checks - whether there are documents, whether there is a name
     }
    
     
