@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B65F8BE82EAF142300B9FC3B /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = B65F8BE72EAF142300B9FC3B /* Lottie */; };
+		B65F8BEB2EAF147800B9FC3B /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = B65F8BEA2EAF147800B9FC3B /* OpenAI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		B6B12B0F2EAB0A5300FFFDC7 /* ios-finWise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-finWise.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +41,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B65F8BEB2EAF147800B9FC3B /* OpenAI in Frameworks */,
+				B65F8BE82EAF142300B9FC3B /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +85,8 @@
 			);
 			name = "ios-finWise";
 			packageProductDependencies = (
+				B65F8BE72EAF142300B9FC3B /* Lottie */,
+				B65F8BEA2EAF147800B9FC3B /* OpenAI */,
 			);
 			productName = "ios-finWise";
 			productReference = B6B12B0F2EAB0A5300FFFDC7 /* ios-finWise.app */;
@@ -107,6 +116,10 @@
 			);
 			mainGroup = B6B12B062EAB0A5300FFFDC7;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B65F8BE62EAF142300B9FC3B /* XCRemoteSwiftPackageReference "lottie-spm" */,
+				B65F8BE92EAF147800B9FC3B /* XCRemoteSwiftPackageReference "OpenAI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B6B12B102EAB0A5300FFFDC7 /* Products */;
 			projectDirPath = "";
@@ -345,6 +358,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B65F8BE62EAF142300B9FC3B /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
+		B65F8BE92EAF147800B9FC3B /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MacPaw/OpenAI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.7;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B65F8BE72EAF142300B9FC3B /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B65F8BE62EAF142300B9FC3B /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
+		};
+		B65F8BEA2EAF147800B9FC3B /* OpenAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B65F8BE92EAF147800B9FC3B /* XCRemoteSwiftPackageReference "OpenAI" */;
+			productName = OpenAI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B6B12B072EAB0A5300FFFDC7 /* Project object */;
 }

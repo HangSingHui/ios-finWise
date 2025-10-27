@@ -17,6 +17,7 @@ extension PreprocessingViewControlerDelegate {
 
 class PreprocessingViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
     
+    let user = AppDelegate.shared.user
     
     var pageImages: [UIImage] = []
     var rawDocument: RawDocument!
@@ -186,10 +187,33 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         dismiss(animated: true)
     }
     
-    @objc func handleGenerate(){
-        
+    @objc func handleGenerate() {
+
+        Task {
+            if pageImages.isEmpty {
+                // show alert
+                return
+            }
+            // TODO: Get a proper document to generate analysis
+            
+           // let dummyImage = UIImage(systemName: "text.document" ?? UIImage()
+            let userDetailsString = """
+            User Age Range: \(user.ageGroup),
+            Financial literacy level: \(user.literacyLevel),
+            Commonly dealt with documents: \(user.commonlyDealtWithDocuments?.joined(separator: ", ") ?? "None")
+            """
+
+            let analyserService = AnalyserService(documentImages: pageImages)
+            
+            do {
+                let analysisResults = try await analyserService.respond(to: userDetailsString)
+                print(analysisResults)
+            } catch {
+                print("Error during analysis: \(error)")
+            }
+        }
     }
-   
+
     
     private func deletePage(at indexPath: IndexPath){
         if indexPath.item >= pageImages.count{
@@ -300,7 +324,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     
 }
 
-#Preview {
-    PreprocessingViewController(documentImage: UIImage(systemName: "folder")!)
-}
-
+//#Preview {
+//    PreprocessingViewController(documentImage: UIImage(systemName: "folder")!)
+//}
+//
