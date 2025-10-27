@@ -9,8 +9,19 @@ import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
+    
+    //Set dummy user
+    let user = User(  name: "Sally",
+                      ageGroup: "18 - 21 (Young Adult)",
+                      literacyLevel: "Advanced",
+                      commonlyDealtWithDocuments: ["Insurance policies", "Loan agreements"]
+                    )
+    
 
-
+    static var shared: AppDelegate{
+        return UIApplication.shared.delegate as! AppDelegate
+    }
+    
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.

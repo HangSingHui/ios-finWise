@@ -17,6 +17,7 @@ extension PreprocessingViewControlerDelegate {
 
 class PreprocessingViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
     
+    let user = AppDelegate.shared.user
     
     var pageImages: [UIImage] = []
     var rawDocument: RawDocument!
@@ -300,7 +301,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     
 }
 
-#Preview {
-    PreprocessingViewController(documentImage: UIImage(systemName: "folder")!)
-}
-
+//#Preview {
+//    PreprocessingViewController(documentImage: UIImage(systemName: "folder")!)
+//}
+//

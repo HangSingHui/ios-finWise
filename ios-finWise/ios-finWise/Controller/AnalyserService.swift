@@ -49,6 +49,8 @@ class AnalyserService{
         let result = try await openAI.chats(query: query)
         let response = result.choices.first?.message.content ?? ""
         
+        //Prepare response and send to view controller
+        
         return response
 
     }

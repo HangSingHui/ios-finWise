@@ -11,8 +11,8 @@ import UniformTypeIdentifiers
 
 class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIDocumentPickerDelegate{
     
-    //Dummy data
-    let user = User(name: "Alex")
+    //Dummy data - set as globally accessed data first - to configure this from the questionnaire page later on
+    let user = AppDelegate.shared.user
     
     let stack = UIStackView()
     var imagePicker: UIImagePickerController!
@@ -201,7 +201,6 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     
     
 }
-
 
 #Preview {
     MainTabBarController()
