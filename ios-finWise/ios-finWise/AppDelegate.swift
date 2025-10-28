@@ -17,7 +17,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                       commonlyDealtWithDocuments: ["Insurance policies", "Loan agreements"]
                     )
     
-
+    
+    //Set variables for savedAnalysis
+    var savedAnalysis = Set<ProcessedDocument>()
+    
     static var shared: AppDelegate{
         return UIApplication.shared.delegate as! AppDelegate
     }

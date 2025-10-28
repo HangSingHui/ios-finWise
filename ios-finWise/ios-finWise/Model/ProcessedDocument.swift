@@ -6,23 +6,24 @@
 
  import Foundation
 
- struct ProcessedDocument: Codable {
-     let documentIdentifier: String
+struct ProcessedDocument: Codable {
+    let id = UUID()
+    let documentIdentifier: String
+    let summary: Summary
+    let obligations: [Obligation]
+    let feesAndPayments: [Fee]
+    let termination: Termination
+    let confidentiality: [Confidentiality]
+    let tips: [Tip]
     
-     let summary: Summary
-     let obligations: [Obligation]
-     let feesAndPayments: [Fee]
-     let termination: Termination
-     let confidentiality: [Confidentiality]
-     let tips: [Tip]
-     
-     enum CodingKeys: String, CodingKey {
-         case documentIdentifier = "document_identifier"
-         case summary, obligations
-         case feesAndPayments = "fees_and_payments"
-         case termination, confidentiality, tips
-     }
-     
+    enum CodingKeys: String, CodingKey {
+        case documentIdentifier = "document_identifier"
+        case summary, obligations
+        case feesAndPayments = "fees_and_payments"
+        case termination, confidentiality, tips
+    }
+
+
      //MARK: - Summary
      struct Summary: Codable {
          let documentType: String
@@ -251,6 +252,17 @@
          return deadlines
      }
  }
+
+extension ProcessedDocument: Hashable {
+    static func == (lhs: ProcessedDocument, rhs: ProcessedDocument) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
 
 // MARK: - Sample Data for Testing
 // #if DEBUG
