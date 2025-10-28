@@ -153,7 +153,6 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell{
         
         if indexPath.item == pageImages.count {
-            print("Creating AddMoreViewCell at index \(indexPath.item)")  // ⭐️ Add this
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: AddMoreViewCell.identifier, for: indexPath) as? AddMoreViewCell else {
                 fatalError("Unable to dequeue AddMoreCell")
             }
@@ -179,7 +178,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         }
         else {
             print("Tapped document \(indexPath.item)")
-            //To present preview modal - just pull up the photo big
+            // TODO: To present preview modal - just pull up the photo big
         }
     }
 

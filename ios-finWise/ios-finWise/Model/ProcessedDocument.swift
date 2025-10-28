@@ -1,10 +1,10 @@
-//Document.swift
+// ProcessedDocument.swift
 // ios-finWise
 
 //Created by Sing Hui Hang on 24/10/25.
  
-
- import Foundation
+import Foundation
+import UIKit
 
 struct ProcessedDocument: Codable {
     let id = UUID()
@@ -22,7 +22,6 @@ struct ProcessedDocument: Codable {
         case feesAndPayments = "fees_and_payments"
         case termination, confidentiality, tips
     }
-
 
      //MARK: - Summary
      struct Summary: Codable {
@@ -46,17 +45,23 @@ struct ProcessedDocument: Codable {
      }
      
       //MARK: - Obligation
-     struct Obligation: Codable {
-         let item: String
-         let critical: Bool
-         let deadline: String?
-         let penaltyForNonCompliance: String?
-         
-         enum CodingKeys: String, CodingKey {
-             case item, critical, deadline
-             case penaltyForNonCompliance = "penalty_for_non_compliance"
-         }
-     }
+    struct Obligation: Codable {
+        let item: String
+        let critical: Bool
+        let deadline: String?
+        let penaltyForNonCompliance: String?
+        let severity: ObligationSeverity?
+        
+        enum CodingKeys: String, CodingKey {
+            case item, critical, deadline
+            case penaltyForNonCompliance = "penalty_for_non_compliance"
+            case severity
+        }
+        
+        enum ObligationSeverity: String, Codable {
+            case low, medium, high, critical
+        }
+    }
      
      // MARK: - Fee
      struct Fee: Codable {
@@ -66,11 +71,17 @@ struct ProcessedDocument: Codable {
          let frequency: String?
          let dueDate: String?
          let latePenalty: String?
+         let severity: FeeSeverity?
          
          enum CodingKeys: String, CodingKey {
              case type, amount, description, frequency
              case dueDate = "due_date"
              case latePenalty = "late_penalty"
+             case severity
+         }
+         
+         enum FeeSeverity: String, Codable {
+             case low, medium, high, critical
          }
          
          // Helper for display
@@ -84,10 +95,16 @@ struct ProcessedDocument: Codable {
          let category: String // "data_collection", "usage", "sharing", "rights", "retention", "security", "marketing"
          let details: String
          let thirdParties: [String]?
+         let severity: ConfidentialitySeverity?
          
          enum CodingKeys: String, CodingKey {
              case category, details
              case thirdParties = "third_parties"
+             case severity
+         }
+         
+         enum ConfidentialitySeverity: String, Codable {
+             case low, medium, high, critical
          }
         
          var displayCategory: String {
@@ -103,11 +120,16 @@ struct ProcessedDocument: Codable {
          let actionRequired: Bool
          let deadline: String?
          let reference: String
+         let severity: TipSeverity?
          
          enum CodingKeys: String, CodingKey {
              case category, title, description
              case actionRequired = "action_required"
-             case deadline, reference
+             case deadline, reference, severity
+         }
+         
+         enum TipSeverity: String, Codable {
+             case low, medium, high, critical
          }
          
         //  Helper computed property for icon
@@ -136,7 +158,6 @@ struct ProcessedDocument: Codable {
              }
          }
          
-       //   Helper for color (for SwiftUI)
          var colorName: String {
              switch category {
              case "watch_out": return "red"
@@ -159,6 +180,7 @@ struct ProcessedDocument: Codable {
          let autoRenewal: AutoRenewal?
          let coolingOffPeriod: CoolingOffPeriod?
          let postTerminationObligations: [String]
+         let severity: TerminationSeverity?
          
          enum CodingKeys: String, CodingKey {
              case howToTerminate = "how_to_terminate"
@@ -168,6 +190,11 @@ struct ProcessedDocument: Codable {
              case autoRenewal = "auto_renewal"
              case coolingOffPeriod = "cooling_off_period"
              case postTerminationObligations = "post_termination_obligations"
+             case severity
+         }
+         
+         enum TerminationSeverity: String, Codable {
+             case low, medium, high, critical
          }
          
          struct TerminationFee: Codable {
@@ -263,124 +290,110 @@ extension ProcessedDocument: Hashable {
     }
 }
 
-
-// MARK: - Sample Data for Testing
-// #if DEBUG
-// extension ProcessedDocument {
-//     static var sample: ProcessedDocument {
-//         ProcessedDocument(
-//             documentIdentifier: "sample-insurance-policy-001",
-//             summary: Summary(
-//                 documentType: "Health Insurance Policy",
-//                 purpose: "Comprehensive health coverage",
-//                 parties: ["ABC Insurance Co.", "John Doe"],
-//                 duration: "12 months",
-//                 keyDates: ["2025-01-01", "2025-12-31"],
-//                 mainPoints: [
-//                     "Coverage up to $100,000 per year",
-//                     "Includes dental and vision",
-//                     "30-day claim submission window"
-//                 ],
-//                 limitations: [
-//                     "Pre-existing conditions excluded for first 6 months",
-//                     "Specialist visits require pre-authorization"
-//                 ],
-//                 topThreeThings: [
-//                     "You must submit claims within 30 days",
-//                     "Annual renewal is automatic unless you cancel 60 days prior",
-//                     "You have a 14-day cooling-off period"
-//                 ]
-//             ),
-//             obligations: [
-//                 Obligation(
-//                     item: "Pay monthly premium of $500",
-//                     critical: true,
-//                     deadline: "1st of each month",
-//                     penaltyForNonCompliance: "$50 late fee after 5 days"
-//                 ),
-//                 Obligation(
-//                     item: "Submit claims within 30 days of service",
-//                     critical: true,
-//                     deadline: "30 days from service date",
-//                     penaltyForNonCompliance: "Claim may be denied"
-//                 )
-//             ],
-//             feesAndPayments: [
-//                 Fee(
-//                     type: "recurring",
-//                     amount: "$500",
-//                     description: "Monthly premium",
-//                     frequency: "monthly",
-//                     dueDate: "1st of each month",
-//                     latePenalty: "$50 after 5 days"
-//                 )
-//             ],
-//             termination: Termination(
-//                 howToTerminate: "Written notice via email or postal mail",
-//                 noticePeriod: "60 days",
-//                 terminationFees: [
-//                     Termination.TerminationFee(
-//                         condition: "Cancellation within first 12 months",
-//                         amount: "$150",
-//                         description: "Early termination fee"
-//                     )
-//                 ],
-//                 refundPolicy: "Pro-rated refund for unused months",
-//                 autoRenewal: Termination.AutoRenewal(
-//                     applies: true,
-//                     renewalDate: "2026-01-01",
-//                     howToPrevent: "Submit cancellation notice 60 days before renewal",
-//                     deadlineToCancel: "2025-11-02"
-//                 ),
-//                 coolingOffPeriod: Termination.CoolingOffPeriod(
-//                     applies: true,
-//                     duration: "14 days",
-//                     endDate: "2025-01-15"
-//                 ),
-//                 postTerminationObligations: [
-//                     "Return insurance card",
-//                     "Pay any outstanding premiums"
-//                 ]
-//             ),
-//             confidentiality: [
-//                 Confidentiality(
-//                     category: "data_collection",
-//                     details: "Collects personal health information, contact details, and payment information",
-//                     thirdParties: nil
-//                 ),
-//                 Confidentiality(
-//                     category: "sharing",
-//                     details: "May share information with healthcare providers and payment processors",
-//                     thirdParties: ["Healthcare providers", "Payment processors"]
-//                 )
-//             ],
-//             tips: [
-//                 Tip(
-//                     category: "save_money",
-//                     title: "Switch to annual payment and save $120",
-//                     description: "You're currently paying monthly ($500/month = $6,000/year). The fee schedule on page 2 shows annual payment is $5,880/year. You'd save $120 by switching at your next renewal.",
-//                     actionRequired: true,
-//                     deadline: "2025-11-02",
-//                     reference: "Page 2, Fee Schedule"
-//                 ),
-//                 Tip(
-//                     category: "dont_miss",
-//                     title: "Mark cancellation deadline",
-//                     description: "Your policy auto-renews on January 1, 2026. You need to give 60 days notice (clause 15.2), so mark November 2, 2025 on your calendar if you want to review alternatives.",
-//                     actionRequired: true,
-//                     deadline: "2025-11-02",
-//                     reference: "Clause 15.2"
-//                 ),
-//                 Tip(
-//                     category: "protect_yourself",
-//                     title: "You have a 14-day cooling-off period",
-//                     description: "You can cancel with full refund until January 15, 2025 (clause 3.1). If you're unsure about coverage limits, you have time to review - no questions asked.",
-//                     actionRequired: false,
-//                     deadline: "2025-01-15",
-//                     reference: "Clause 3.1"
-//                 )
-//             ]
-//         )
-//     }
-// }
-// #endif
+// MARK: - Severity Display Helper
+extension ProcessedDocument {
+    enum Severity {
+        case low, medium, high, critical
+        
+        var displayName: String {
+            switch self {
+            case .low: return "Low"
+            case .medium: return "Medium"
+            case .high: return "High"
+            case .critical: return "Critical"
+            }
+        }
+        
+        var color: UIColor {
+            switch self {
+            case .low: return UIColor.systemGreen
+            case .medium: return UIColor.systemOrange
+            case .high: return UIColor.systemRed
+            case .critical: return UIColor.systemPurple
+            }
+        }
+    }
+    
+    // Convert from JSON severity to display severity
+    private func convertSeverity(_ severity: String?) -> Severity {
+        guard let severity = severity else { return .medium }
+        switch severity.lowercased() {
+        case "low": return .low
+        case "medium": return .medium
+        case "high": return .high
+        case "critical": return .critical
+        default: return .medium
+        }
+    }
+    
+    // Calculated severity properties for each section
+    var obligationsSeverity: Severity {
+        // If any obligation has explicit severity, use the highest one
+        let explicitSeverities = obligations.compactMap { $0.severity?.rawValue }
+        if let highest = explicitSeverities.max(by: { severityRank($0) < severityRank($1) }) {
+            return convertSeverity(highest)
+        }
+        
+        // Otherwise calculate based on critical count
+        let criticalCount = obligations.filter { $0.critical }.count
+        if criticalCount >= 3 { return .critical }
+        if criticalCount >= 2 { return .high }
+        if criticalCount >= 1 { return .medium }
+        return .low
+    }
+    
+    var feesSeverity: Severity {
+        // If any fee has explicit severity, use the highest one
+        let explicitSeverities = feesAndPayments.compactMap { $0.severity?.rawValue }
+        if let highest = explicitSeverities.max(by: { severityRank($0) < severityRank($1) }) {
+            return convertSeverity(highest)
+        }
+        
+        // Otherwise calculate based on recurring fees
+        let recurringFees = feesAndPayments.filter { $0.type == "recurring" }.count
+        if recurringFees >= 3 { return .high }
+        if recurringFees >= 1 { return .medium }
+        return .low
+    }
+    
+    var terminationSeverity: Severity {
+        // Use explicit severity if available
+        if let severity = termination.severity?.rawValue {
+            return convertSeverity(severity)
+        }
+        
+        // Otherwise calculate based on conditions
+        let hasAutoRenewal = termination.autoRenewal?.applies ?? false
+        let hasTerminationFees = !termination.terminationFees.isEmpty
+        
+        if hasAutoRenewal && hasTerminationFees { return .high }
+        if hasAutoRenewal || hasTerminationFees { return .medium }
+        return .low
+    }
+    
+    var confidentialitySeverity: Severity {
+        // If any confidentiality item has explicit severity, use the highest one
+        let explicitSeverities = confidentiality.compactMap { $0.severity?.rawValue }
+        if let highest = explicitSeverities.max(by: { severityRank($0) < severityRank($1) }) {
+            return convertSeverity(highest)
+        }
+        
+        // Otherwise calculate based on third-party sharing
+        let hasThirdParties = confidentiality.contains {
+            $0.thirdParties != nil && !($0.thirdParties?.isEmpty ?? true)
+        }
+        if hasThirdParties { return .medium }
+        return .low
+    }
+    
+    // Helper to rank severity strings for comparison
+    private func severityRank(_ severity: String) -> Int {
+        switch severity.lowercased() {
+        case "low": return 1
+        case "medium": return 2
+        case "high": return 3
+        case "critical": return 4
+        default: return 0
+        }
+    }
+}
