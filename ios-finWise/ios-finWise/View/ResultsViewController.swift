@@ -306,6 +306,10 @@ class ResultsViewController: UIViewController {
             severityLabel.bottomAnchor.constraint(lessThanOrEqualTo: card.bottomAnchor, constant: -16)
         ])
         
+        let tap = UITapGestureRecognizer(target: self, action: #selector(cardTapped(_:)))
+        card.addGestureRecognizer(tap)
+        card.accessibilityLabel = title
+        
         return card
     }
     
@@ -425,6 +429,33 @@ class ResultsViewController: UIViewController {
     @objc private func segmentChanged() {
         currentSection = segmentedControl.selectedSegmentIndex == 0 ? .highlights : .tips
         updateCardsForCurrentSection()
+    }
+    
+    @objc private func cardTapped(_ sender: UITapGestureRecognizer){
+        
+        guard let tappedCard = sender.view,
+              let title = tappedCard.accessibilityLabel else { return }
+        
+        var details: [Any] = []
+        
+        switch title {
+            case "Obligations":
+                details = currentAnalysis.obligations
+            case "Confidentiality":
+                details = currentAnalysis.confidentiality
+            case "Termination":
+                details = [currentAnalysis.termination]
+            case "Fees & Payments":
+                details = currentAnalysis.feesAndPayments
+        default:
+            break
+        
+        }
+        
+        //Create view controller and push
+        let detailVC = DetailView(currDetails: details)
+        navigationController?.pushViewController(detailVC, animated: true)
+   
     }
 }
 

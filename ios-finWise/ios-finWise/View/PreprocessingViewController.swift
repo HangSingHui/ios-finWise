@@ -7,11 +7,11 @@
 
 import UIKit
 
-protocol PreprocessingViewControlerDelegate: AnyObject{
+protocol PreprocessingViewControllerDelegate: AnyObject{
     func didAddNewPhoto(_ photo: UIImage)
 }
 
-extension PreprocessingViewControlerDelegate {
+extension PreprocessingViewControllerDelegate {
     func didAddPhoto(_ photo: UIImage){}
 }
 
