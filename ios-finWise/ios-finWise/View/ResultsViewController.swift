@@ -394,8 +394,18 @@ class ResultsViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func returnToHome() {
-        navigationController?.popToRootViewController(animated: true)
+        guard let nav = navigationController else { return }
+
+        // Find the HomeViewController in the stack
+        if let homeVC = nav.viewControllers.first(where: { $0 is MainTabBarController }) {
+            nav.popToViewController(homeVC, animated: true)
+        } else {
+            // HomeVC not found — fallback: create and set it as root
+            let homeVC = MainTabBarController()
+            nav.setViewControllers([homeVC], animated: true)
+        }
     }
+
     
     @objc private func toggleSave() {
         if savedAnalysis.contains(currentAnalysis) {

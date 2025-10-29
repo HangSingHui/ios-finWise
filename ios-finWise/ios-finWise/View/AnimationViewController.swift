@@ -31,6 +31,9 @@ class AnimationViewController: UIViewController {
     
     private var timer: Timer?
     
+    var onFinish: ((String) -> Void)? // Completion handler
+
+    
     let loadingText = [
         "Sniffing out sneaky clauses…",
         "Counting invisible fees…",
