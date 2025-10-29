@@ -47,7 +47,8 @@ class ResultsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        
+
+        navigationItem.largeTitleDisplayMode = .never
         setupBackground()
         setupNavigationBar()
         setupScrollView()
@@ -480,14 +481,12 @@ class ResultsViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func returnToHome() {
-        guard let nav = navigationController else { return }
-        
-        // Find the HomeViewController in the stack
-        if let homeVC = nav.viewControllers.first(where: { $0 is MainTabBarController }) {
-            nav.popToViewController(homeVC, animated: true)
+        if let nav = navigationController, nav.viewControllers.first != self {
+            // If we're inside a navigation stack, just pop to root
+            nav.popToRootViewController(animated: true)
         } else {
-            let homeVC = MainTabBarController()
-            nav.setViewControllers([homeVC], animated: true)
+            // Otherwise, dismiss any modals
+            self.view.window?.rootViewController?.dismiss(animated: true, completion: nil)
         }
     }
     

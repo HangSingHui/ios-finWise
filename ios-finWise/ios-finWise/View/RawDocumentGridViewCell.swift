@@ -6,20 +6,28 @@
 //
 
 import UIKit
-
 class RawDocumentGridViewCell: UICollectionViewCell{
     
     static let identifier = "RawDocumentGridViewCell"
     
+    private let cardView: UIView = {
+        let v = UIView()
+        v.backgroundColor = .systemBackground
+        v.layer.cornerRadius = 14
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.12
+        v.layer.shadowRadius = 6
+        v.layer.shadowOffset = CGSize(width: 0, height: 3)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
     let documentImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
-        imageView.tintColor = .label
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.layer.cornerRadius = 12
+        imageView.layer.cornerRadius = 10
         imageView.clipsToBounds = true
-        imageView.layer.borderWidth = 1
-        imageView.layer.borderColor = UIColor.systemGray4.cgColor
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
@@ -35,21 +43,25 @@ class RawDocumentGridViewCell: UICollectionViewCell{
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        contentView.addSubview(documentImageView)
-        contentView.addSubview(documentLabel)
+        contentView.addSubview(cardView)
+        cardView.addSubview(documentImageView)
+        cardView.addSubview(documentLabel)
         
         NSLayoutConstraint.activate([
-            // Image takes most of the space
-            documentImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            documentImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            documentImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            documentImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.85),
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
-            // Label below image
-            documentLabel.topAnchor.constraint(equalTo: documentImageView.bottomAnchor, constant: 8),
-            documentLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            documentLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            documentLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor)
+            documentImageView.topAnchor.constraint(equalTo: cardView.topAnchor),
+            documentImageView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor),
+            documentImageView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor),
+            documentImageView.heightAnchor.constraint(equalTo: cardView.heightAnchor, multiplier: 0.85),
+            
+            documentLabel.topAnchor.constraint(equalTo: documentImageView.bottomAnchor, constant: 6),
+            documentLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor),
+            documentLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor),
+            documentLabel.bottomAnchor.constraint(lessThanOrEqualTo: cardView.bottomAnchor)
         ])
     }
     
@@ -63,6 +75,3 @@ class RawDocumentGridViewCell: UICollectionViewCell{
     }
 }
 
-#Preview{
-    RawDocumentGridViewCell()
-}
