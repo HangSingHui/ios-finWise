@@ -21,18 +21,16 @@ class WelcomeGradientView: UIView {
     }
 
     func setupGradient() {
-        // Blue gradient background
+        // Lighter blue gradient background
         gradientLayer.colors = [
-            UIColor(red: 0.65, green: 0.78, blue: 0.98, alpha: 1.0).cgColor, // top light blue
-            UIColor(red: 0.45, green: 0.63, blue: 0.95, alpha: 1.0).cgColor, // middle blue
-            UIColor(red: 0.25, green: 0.49, blue: 0.92, alpha: 1.0).cgColor  // bottom deep blue
+            UIColor(red: 0.65, green: 0.78, blue: 0.95, alpha: 1.0).cgColor, // top light blue
+            UIColor(red: 0.55, green: 0.70, blue: 0.92, alpha: 1.0).cgColor, // middle blue
+            UIColor(red: 0.45, green: 0.62, blue: 0.88, alpha: 1.0).cgColor  // bottom deep blue
         ]
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-
-       // addDecorativeShapes()
-       // animateShapes()
     }
+
 
     private func animateShapes() {
         decorativeShapes.forEach { shape in
@@ -47,30 +45,7 @@ class WelcomeGradientView: UIView {
         }
     }
 
-//    private func addDecorativeShapes() {
-//        decorativeShapes.forEach { $0.removeFromSuperlayer() }
-//        decorativeShapes.removeAll()
-//
-//        // Top right floating shape
-//        addShape(
-//            size: CGSize(width: 350, height: 250),
-//            position: CGPoint(x: bounds.width - 90, y: 180),
-//            cornerRadius: 40,
-//            rotation: -10,
-//            color: UIColor.white.withAlphaComponent(0.3)
-//        )
-//
-//        // Bottom left floating shape
-//        addShape(
-//            size: CGSize(width: 400, height: 250),
-//            position: CGPoint(x: 100, y: bounds.height - 180),
-//            cornerRadius: 50,
-//            rotation: -20,
-//            color: UIColor.white.withAlphaComponent(0.25)
-//        )
-//
-//
-//    }
+
 
     private func addShape(size: CGSize, position: CGPoint, cornerRadius: CGFloat, rotation: CGFloat, color: UIColor) {
         let shapeLayer = CAShapeLayer()
@@ -87,9 +62,5 @@ class WelcomeGradientView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-//        if !decorativeShapes.isEmpty {
-//          //  addDecorativeShapes()
-//            animateShapes()
-//        }
     }
 }
