@@ -48,6 +48,7 @@ class ResultsViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         
+        setupBackground()
         setupNavigationBar()
         setupScrollView()
         setupTitle()
@@ -59,6 +60,17 @@ class ResultsViewController: UIViewController {
     }
     
     // MARK: - Setup Methods
+    private func setupBackground(){
+        //TODO: Understand what this code means
+        let gradientView = GradientView()
+        gradientView.frame = view.bounds
+        gradientView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        
+        gradientView.setupGradient()
+        view.insertSubview(gradientView, at: 0)
+        
+    }
+    
     private func setupNavigationBar() {
         // Left bar button - Home
         let homeButton = UIBarButtonItem(
@@ -400,7 +412,6 @@ class ResultsViewController: UIViewController {
         if let homeVC = nav.viewControllers.first(where: { $0 is MainTabBarController }) {
             nav.popToViewController(homeVC, animated: true)
         } else {
-            // HomeVC not found — fallback: create and set it as root
             let homeVC = MainTabBarController()
             nav.setViewControllers([homeVC], animated: true)
         }
