@@ -21,7 +21,6 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     
     var processedDocs: [ProcessedDocument] = []
     var selectMenu = UIMenu()
-    
 
 
     override func viewDidLoad() {
