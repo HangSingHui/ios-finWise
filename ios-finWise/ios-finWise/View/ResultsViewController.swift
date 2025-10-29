@@ -250,15 +250,35 @@ class ResultsViewController: UIViewController {
     }
     
     private func addHighlightCards() {
-        let sections: [(String, String, Severity)] = [
-            ("Obligations", "clipboard", calculateObligationsSeverity()),
-            ("Fees & Payments", "creditcard", calculateFeesSeverity()),
-            ("Termination", "bolt.horizontal", calculateTerminationSeverity()),
-            ("Confidentiality", "lock", calculateConfidentialitySeverity())
+        let obligationDetails = currentAnalysis.obligations.map{
+            var line = "• \($0.item)"
+            if let deadline = $0.deadline { line += "Deadline: \(deadline)" }
+            if $0.critical { line += " ⚠️ Critical" }
+            return line
+        }
+        
+        let feeDetails = currentAnalysis.feesAndPayments.map{
+            "• \($0.displayType): \($0.amount) - \($0.description)"
+        }
+        
+        // TODO: Work on buildTerminationDetails function
+        let terminationDetails = buildTerminationDetails()
+        
+        let confidentialityDetails = currentAnalysis.confidentiality.map{
+            "• \($0.displayCategory): \($0.details)"
+        }
+        
+        //Add array of strings
+        let sections: [(String, String, Severity, [String])] = [
+            ("Obligations", "clipboard", calculateObligationsSeverity(), obligationDetails),
+            ("Fees & Payments", "creditcard", calculateFeesSeverity(), feeDetails),
+            ("Termination", "bolt.horizontal", calculateTerminationSeverity(), terminationDetails),
+            ("Confidentiality", "lock", calculateConfidentialitySeverity(), confidentialityDetails)
         ]
         
-        for (title, iconName, severity) in sections {
-            let card = createCard(title: title, iconName: iconName, severity: severity)
+        
+        for (title, iconName, severity, details) in sections {
+            let card = createCard(title: title, iconName: iconName, severity: severity, details: details)
             cardsStackView.addArrangedSubview(card)
         }
     }
@@ -266,12 +286,52 @@ class ResultsViewController: UIViewController {
     private func addTipCards() {
         for tip in currentAnalysis.tips {
             let iconName = getIconName(for: tip.category)
-            let card = createCard(title: tip.title, iconName: iconName, severity: nil)
+            
+            let details = [
+                "• \(tip.description)",
+                tip.actionRequired ? "• Action needed ✅" : "• No action required",
+                tip.deadline != nil ? "• Deadline: \(tip.deadline!)" : nil,
+                "• Reference: \(tip.reference)"
+            ].compactMap { $0 } // removes nil
+            
+            let card = createCard(title: tip.title,
+                                  iconName: iconName,
+                                  severity: nil,
+                                  details: details)
+            
             cardsStackView.addArrangedSubview(card)
         }
     }
     
-    private func createCard(title: String, iconName: String, severity: Severity?) -> UIView {
+    
+    //Helper function
+    private func buildTerminationDetails() -> [String] {
+        var lines: [String] = []
+        
+        if let how = currentAnalysis.termination.howToTerminate {
+            lines.append("• How to terminate: \(how)")
+        }
+        if let notice = currentAnalysis.termination.noticePeriod {
+            lines.append("• Notice period: \(notice)")
+        }
+        if !currentAnalysis.termination.terminationFees.isEmpty {
+            lines.append("• Termination fees apply")
+        }
+        if let refund = currentAnalysis.termination.refundPolicy {
+            lines.append("• Refund policy: \(refund)")
+        }
+        if let auto = currentAnalysis.termination.autoRenewal, auto.applies {
+            lines.append("• Auto-renewal: Yes")
+            if let date = auto.renewalDate { lines.append("  – Renewal date: \(date)") }
+            if let prevent = auto.howToPrevent { lines.append("  – How to prevent: \(prevent)") }
+        }
+        
+        return lines
+    }
+    
+    
+    // Pass in segment specific details later
+    private func createCard(title: String, iconName: String, severity: Severity?, details: [String]) -> UIView {
         let card = UIView()
         card.backgroundColor = .secondarySystemBackground
         card.layer.cornerRadius = 12
@@ -297,33 +357,47 @@ class ResultsViewController: UIViewController {
         }
         severityLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        let moreInfoLabel = UILabel()
+        moreInfoLabel.numberOfLines = 0
+        moreInfoLabel.font = .systemFont(ofSize: 14)
+        moreInfoLabel.textColor = .secondaryLabel
+        moreInfoLabel.text = details.joined(separator: "\n")
+        moreInfoLabel.isHidden = true // start hidden
+        moreInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // StackView to hold title, severity, and moreInfo
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, severityLabel, moreInfoLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 4
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
         card.addSubview(iconImageView)
-        card.addSubview(titleLabel)
-        card.addSubview(severityLabel)
+        card.addSubview(stackView)
         
         NSLayoutConstraint.activate([
             card.heightAnchor.constraint(greaterThanOrEqualToConstant: 80),
             
-            iconImageView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+            iconImageView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
             iconImageView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
             iconImageView.widthAnchor.constraint(equalToConstant: 32),
             iconImageView.heightAnchor.constraint(equalToConstant: 32),
             
-            titleLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 16),
-            titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
-            
-            severityLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            severityLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            severityLabel.bottomAnchor.constraint(lessThanOrEqualTo: card.bottomAnchor, constant: -16)
+            stackView.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            stackView.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+            stackView.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16)
         ])
         
+        // Tag the moreInfoLabel so we can toggle it
+        moreInfoLabel.tag = 101
+        
+        // Tap gesture
         let tap = UITapGestureRecognizer(target: self, action: #selector(cardTapped(_:)))
         card.addGestureRecognizer(tap)
-        card.accessibilityLabel = title
         
         return card
     }
+
     
     // MARK: - Severity Calculations
     enum Severity {
@@ -402,12 +476,12 @@ class ResultsViewController: UIViewController {
         
         saveButton.image = image
     }
-
+    
     
     // MARK: - Actions
     @objc private func returnToHome() {
         guard let nav = navigationController else { return }
-
+        
         // Find the HomeViewController in the stack
         if let homeVC = nav.viewControllers.first(where: { $0 is MainTabBarController }) {
             nav.popToViewController(homeVC, animated: true)
@@ -416,7 +490,7 @@ class ResultsViewController: UIViewController {
             nav.setViewControllers([homeVC], animated: true)
         }
     }
-
+    
     
     @objc private func toggleSave() {
         if savedAnalysis.contains(currentAnalysis) {
@@ -445,40 +519,26 @@ class ResultsViewController: UIViewController {
         
         present(activityVC, animated: true)
     }
-
+    
     
     @objc private func segmentChanged() {
         currentSection = segmentedControl.selectedSegmentIndex == 0 ? .highlights : .tips
         updateCardsForCurrentSection()
     }
     
-    @objc private func cardTapped(_ sender: UITapGestureRecognizer){
+    @objc private func cardTapped(_ sender: UITapGestureRecognizer) {
+        guard let card = sender.view else { return }
+        guard let moreInfoLabel = card.viewWithTag(101) as? UILabel else { return }
         
-        guard let tappedCard = sender.view,
-              let title = tappedCard.accessibilityLabel else { return }
-        
-        var details: [Any] = []
-        
-        switch title {
-            case "Obligations":
-                details = currentAnalysis.obligations
-            case "Confidentiality":
-                details = currentAnalysis.confidentiality
-            case "Termination":
-                details = [currentAnalysis.termination]
-            case "Fees & Payments":
-                details = currentAnalysis.feesAndPayments
-        default:
-            break
-        
+        // Animate expand/collapse
+        UIView.animate(withDuration: 0.25) {
+            moreInfoLabel.isHidden.toggle()
+            moreInfoLabel.alpha = moreInfoLabel.isHidden ? 0 : 1
+            self.view.layoutIfNeeded()
         }
-        
-        //Create view controller and push
-        let detailVC = DetailView(currDetails: details)
-        navigationController?.pushViewController(detailVC, animated: true)
-   
     }
 }
+
 
 // MARK: - Preview
 #Preview {
@@ -507,6 +567,13 @@ class ResultsViewController: UIViewController {
                 deadline: nil,
                 penaltyForNonCompliance: nil,
                 severity: .medium
+            ),
+            ProcessedDocument.Obligation(
+                item: "Yearly payment",
+                critical: false,
+                deadline: nil,
+                penaltyForNonCompliance: nil,
+                severity: .low
             )
         ],
         feesAndPayments: [
