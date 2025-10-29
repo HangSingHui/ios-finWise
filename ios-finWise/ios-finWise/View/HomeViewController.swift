@@ -20,7 +20,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     
     var imagePicker: UIImagePickerController!
     var documentPicker: UIDocumentPickerViewController!
-    var greetingLabel: UILabel!
+    var titleLabel: UILabel!
     
     // MARK: - View Lifecycle
     override func viewDidLoad() {
@@ -108,11 +108,23 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.register(HomeListViewCell.self, forCellWithReuseIdentifier: HomeListViewCell.identifier)
         
+        
+        //Add title
+        titleLabel = UILabel()
+        titleLabel.text = "Your Past Analysis"
+        titleLabel.textColor = .gray
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(titleLabel)
         view.addSubview(collectionView)
         
         NSLayoutConstraint.activate([
-
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 12),
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+           titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            
+            collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -121,7 +133,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        DummyDocuments.all.count
+        savedDocuments.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -173,8 +185,9 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     }
     
     private func updateUI() {
-        let hasDocs = DummyDocuments.all.count > 0
+        let hasDocs = savedDocuments.count > 0
         collectionView.isHidden = !hasDocs
+        titleLabel.isHidden = !hasDocs
         emptyStack.isHidden = hasDocs
     }
     

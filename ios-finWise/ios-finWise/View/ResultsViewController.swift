@@ -130,7 +130,7 @@ class ResultsViewController: UIViewController {
         
         summaryTextView.text = buildSummaryText()
         summaryTextView.font = .systemFont(ofSize: 15)
-        summaryTextView.textColor = .secondaryLabel
+        summaryTextView.textColor = .black
         summaryTextView.backgroundColor = .clear
         summaryTextView.isEditable = false
         summaryTextView.isScrollEnabled = false
@@ -262,7 +262,6 @@ class ResultsViewController: UIViewController {
             "• \($0.displayType): \($0.amount) - \($0.description)"
         }
         
-        // TODO: Work on buildTerminationDetails function
         let terminationDetails = buildTerminationDetails()
         
         let confidentialityDetails = currentAnalysis.confidentiality.map{
