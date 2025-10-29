@@ -5,202 +5,211 @@
 //  Created by Sing Hui Hang on 24/10/25.
 //
 
+
 import UIKit
 import UniformTypeIdentifiers
 
+class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIDocumentPickerDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
 
-class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIDocumentPickerDelegate{
-    
-    //Dummy data - set as globally accessed data first - to configure this from the questionnaire page later on
     let user = AppDelegate.shared.user
     
-    let stack = UIStackView()
+    var savedDocuments =  AppDelegate.shared.savedAnalysis
+    
+    private var collectionView: UICollectionView!
+    private var emptyStack: UIStackView!
+    
     var imagePicker: UIImagePickerController!
     var documentPicker: UIDocumentPickerViewController!
+    var titleLabel: UILabel!
     
-    
-    var processedDocs: [ProcessedDocument] = []
-    var selectMenu = UIMenu()
-
-
+    // MARK: - View Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
         navigationItem.largeTitleDisplayMode = .always
-        title = "Hello, \(user.name)"
+        navigationController?.navigationBar.prefersLargeTitles = true
         
-        //Add plus button
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "plus"),
-            menu: UIMenu(children:[
-                UIAction(title:"Camera", image: UIImage(systemName: "camera")){ _ in self.uploadByCamera()},
-                
-                UIAction(title:"Upload Docs",image: UIImage(systemName: "filemenu.and.pointer.arrow")){_ in self.uploadByFile()}
-            ])
-        )
+        navigationItem.title = "Hello, \(user.name) 👋"
         
-        //Explictly set
-        self.tabBarItem = UITabBarItem(title: "Files", image: UIImage(systemName: "folder"), tag: 0)
+        //Setup dummy data inside saved
+        //Add dummy inside the saveddocuments
+        for doc in DummyDocuments.all {
+            savedDocuments.insert(doc)
+        }
         
         setupBackground()
         setupImageAndDocumentPickers()
-        setupTableView()
-        setupUI()
-        setupLayout()
+        setupNavigationBar()
+        setupCollectionView()
+        setupEmptyState()
+        updateUI()
     }
     
-    override func viewWillAppear(_ animated: Bool){
-        super.viewWillAppear(animated)
-        navigationController?.navigationBar.prefersLargeTitles = true
-        
+    // MARK: - Navigation Bar
+    private func setupNavigationBar() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "plus"),
+            menu: UIMenu(children: [
+                UIAction(title:"Camera", image: UIImage(systemName: "camera")){ [weak self] _ in self?.uploadByCamera() },
+                UIAction(title:"Upload Docs", image: UIImage(systemName: "filemenu.and.pointer.arrow")){ [weak self] _ in self?.uploadByFile() }
+            ])
+        )
     }
-    
-    @objc func uploadByCamera(){
-    
-        present(imagePicker, animated: true,completion: nil)
 
-    }
     
-    private func setupImageAndDocumentPickers(){
-        //Setup image picker
+    // MARK: - Image / Document Picker
+    private func setupImageAndDocumentPickers() {
         imagePicker = UIImagePickerController()
         imagePicker.sourceType = .camera
         imagePicker.allowsEditing = false
         imagePicker.delegate = self
         
-        //Setup document picker
         let supportedTypes: [UTType] = [.pdf, .text]
         documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
         documentPicker.delegate = self
-        
-        
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
-        guard let image = info[.originalImage] as? UIImage else{
-            return
-        }
+        guard let image = info[.originalImage] as? UIImage else { return }
         
-        //Push the view controller
         let previewVC = PreprocessingViewController(documentImage: image)
         let navController = UINavigationController(rootViewController: previewVC)
-       
         navController.modalPresentationStyle = .pageSheet
         if let sheet = navController.sheetPresentationController {
             sheet.prefersGrabberVisible = true
             sheet.preferredCornerRadius = 20
             sheet.prefersScrollingExpandsWhenScrolledToEdge = false
             sheet.largestUndimmedDetentIdentifier = .medium
-            
         }
         navController.isModalInPresentation = true
         present(navController, animated: true)
-
-        
     }
     
-    @objc func uploadByFile(){
-        //Open up file folder within iphone
-        //Prepare document picker
-        self.present(documentPicker, animated: true, completion: nil)
-        
+    @objc func uploadByCamera() {
+        present(imagePicker, animated: true)
     }
     
-    private func setupTableView(){
+    @objc func uploadByFile() {
+        present(documentPicker, animated: true)
+    }
+    
+    // MARK: - Collection View
+    private func setupCollectionView() {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 12
+        layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        layout.itemSize = CGSize(width: view.bounds.width - 32, height: 100)
         
-        if processedDocs.count == 0{
-            setupEmptyState()
-        }
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.register(HomeListViewCell.self, forCellWithReuseIdentifier: HomeListViewCell.identifier)
+        
+        
+        //Add title
+        titleLabel = UILabel()
+        titleLabel.text = "Your Past Analysis"
+        titleLabel.textColor = .gray
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(titleLabel)
+        view.addSubview(collectionView)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+           titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
-        else{
-            //Display table view
-        }
-        
- 
+            collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
     }
     
-    private func setupEmptyState(){
-        //Display default message
-        let emptyDefaultTitle = "You don't have any analysis yet."
-        let emptyDefaultSubTitle = "Get started with finWise by adding a document today!"
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        savedDocuments.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HomeListViewCell.identifier, for: indexPath) as! HomeListViewCell
+        let doc = DummyDocuments.all[indexPath.item]
+        cell.configure(with: doc)
+        cell.delegate = self
+        return cell
+    }
+    
+    // MARK: - Empty State
+    private func setupEmptyState() {
+        emptyStack = UIStackView()
+        emptyStack.axis = .vertical
+        emptyStack.alignment = .center
+        emptyStack.spacing = 15
+        emptyStack.translatesAutoresizingMaskIntoConstraints = false
         
-        //Create a stack view
-        let defaultMessageStack = UIStackView()
-        defaultMessageStack.axis = .vertical
-        defaultMessageStack.alignment = .center
-        defaultMessageStack.spacing = 15
-        
-        //Configure document image
         let emptyIconView = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 80, weight: .medium)
-        emptyIconView.image = UIImage(systemName: "document.badge.plus", withConfiguration: config)
+        emptyIconView.image = UIImage(systemName: "document.badge.plus", withConfiguration: UIImage.SymbolConfiguration(pointSize: 80, weight: .medium))
         emptyIconView.tintColor = .secondaryLabel
         emptyIconView.alpha = 0.3
-        defaultMessageStack.addArrangedSubview(emptyIconView)
+        emptyStack.addArrangedSubview(emptyIconView)
         
-        //Connfigure title label
         let emptyTitleLabel = UILabel()
-        emptyTitleLabel.text = emptyDefaultTitle
+        emptyTitleLabel.text = "You don't have any analysis yet."
         emptyTitleLabel.textAlignment = .center
         emptyTitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         emptyTitleLabel.alpha = 0.8
-        defaultMessageStack.addArrangedSubview(emptyTitleLabel)
+        emptyStack.addArrangedSubview(emptyTitleLabel)
         
-        //Configure subtitle label
         let emptySubtitleLabel = UILabel()
-        emptySubtitleLabel.text = emptyDefaultSubTitle
-        emptySubtitleLabel.textAlignment = .left
-        emptySubtitleLabel.textColor = .secondaryLabel
+        emptySubtitleLabel.text = "Get started with finWise by adding a document today!"
+        emptySubtitleLabel.textAlignment = .center
         emptySubtitleLabel.font = UIFont.systemFont(ofSize: 14)
+        emptySubtitleLabel.textColor = .secondaryLabel
         emptySubtitleLabel.numberOfLines = 0
         emptySubtitleLabel.alpha = 0.7
-        defaultMessageStack.addArrangedSubview(emptySubtitleLabel)
-       
-        view.addSubview(defaultMessageStack)
-        defaultMessageStack.translatesAutoresizingMaskIntoConstraints = false
+        emptyStack.addArrangedSubview(emptySubtitleLabel)
+        
+        view.addSubview(emptyStack)
         
         NSLayoutConstraint.activate([
-               defaultMessageStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-               defaultMessageStack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-               defaultMessageStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-               defaultMessageStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20)
-           ])
-    }
-    
-    private func setupBackground(){
-        //TODO: Understand what this code means
-        let gradientView = GradientView()
-        gradientView.frame = view.bounds
-        gradientView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        
-        gradientView.setupGradient()
-        view.insertSubview(gradientView, at: 0)
-        
-    }
-    
-    private func setupUI(){
-        //TODO: Add plus button, search bar, tab bar
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 20
-        view.addSubview(stack)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-    }
-    
-    private func setupLayout(){
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            
+            emptyStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyStack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            emptyStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            emptyStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20)
         ])
     }
     
+    private func updateUI() {
+        let hasDocs = savedDocuments.count > 0
+        collectionView.isHidden = !hasDocs
+        titleLabel.isHidden = !hasDocs
+        emptyStack.isHidden = hasDocs
+    }
     
+    // MARK: - Background Gradient
+    private func setupBackground() {
+        let gradientView = GradientView()
+        gradientView.frame = view.bounds
+        gradientView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        gradientView.setupGradient()
+        view.insertSubview(gradientView, at: 0)
+    }
 }
 
-#Preview {
+// MARK: - HomeListViewCellDelegate
+extension HomeViewController: HomeListViewCellDelegate {
+    func homeListCellDidSelect(document: ProcessedDocument) {
+        let resultVC = ResultsViewController(analysis: document)
+        resultVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(resultVC, animated: true)
+    }
+}
+
+#Preview{
     MainTabBarController()
 }
