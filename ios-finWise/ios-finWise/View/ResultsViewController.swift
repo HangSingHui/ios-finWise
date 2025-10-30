@@ -9,6 +9,8 @@ import UIKit
 
 class ResultsViewController: UIViewController {
     
+    var onAnalysisSaved: (() -> Void)?
+    
     // MARK: - Properties
     let currentAnalysis: ProcessedDocument!
     var savedAnalysis = AppDelegate.shared.savedAnalysis
@@ -58,6 +60,13 @@ class ResultsViewController: UIViewController {
         setupBreakdownSection()
         setupLayout()
         updateCardsForCurrentSection()
+        
+        if !AppDelegate.shared.savedAnalysis.contains(currentAnalysis) {
+            AppDelegate.shared.savedAnalysis.insert(currentAnalysis)
+            DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+        }
+        // Notify Home immediately
+        onAnalysisSaved?()
     }
     
     // MARK: - Setup Methods
@@ -82,14 +91,7 @@ class ResultsViewController: UIViewController {
         )
         navigationItem.leftBarButtonItem = homeButton
         
-        // Right bar buttons - Save and Share (always visible)
-        saveButton = UIBarButtonItem(
-            image: UIImage(systemName: "heart"),
-            style: .plain,
-            target: self,
-            action: #selector(toggleSave)
-        )
-        
+        // Only show share button on the right
         shareButton = UIBarButtonItem(
             image: UIImage(systemName: "square.and.arrow.up"),
             style: .plain,
@@ -97,8 +99,9 @@ class ResultsViewController: UIViewController {
             action: #selector(shareAnalysis)
         )
         
-        navigationItem.rightBarButtonItems = [shareButton, saveButton]
+        navigationItem.rightBarButtonItem = shareButton
     }
+
     
     private func setupScrollView() {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -489,16 +492,22 @@ class ResultsViewController: UIViewController {
         }
     }
     
-    
     @objc private func toggleSave() {
         if savedAnalysis.contains(currentAnalysis) {
             savedAnalysis.remove(currentAnalysis)
-            saveButton.image = UIImage(systemName: "heart") // normal state
         } else {
             savedAnalysis.insert(currentAnalysis)
-            saveButton.image = UIImage(systemName: "heart.fill") // filled state
         }
+        AppDelegate.shared.savedAnalysis = savedAnalysis
+        
+        // Persist
+        DocumentManager.shared.save(documents: savedAnalysis)
+        
+        // Update button UI
+        updateSaveButtonState()
     }
+
+
     
     @objc private func shareAnalysis() {
         let shareText = """

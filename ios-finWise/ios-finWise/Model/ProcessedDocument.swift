@@ -7,7 +7,8 @@ import Foundation
 import UIKit
 
 struct ProcessedDocument: Codable {
-    let id = UUID()
+    let id: UUID  // Remove the default value assignment
+    let createdAt: Date
     let documentIdentifier: String
     let summary: Summary
     let obligations: [Obligation]
@@ -21,7 +22,48 @@ struct ProcessedDocument: Codable {
         case summary, obligations
         case feesAndPayments = "fees_and_payments"
         case termination, confidentiality, tips
+        case createdAt = "created_at" // <-- add this
+        // Note: 'id' is NOT in CodingKeys
     }
+    
+    init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+            // Generate UUID during decoding
+            self.id = UUID()
+            
+            // Decode all other properties
+            self.documentIdentifier = try container.decode(String.self, forKey: .documentIdentifier)
+            self.summary = try container.decode(Summary.self, forKey: .summary)
+            self.obligations = try container.decode([Obligation].self, forKey: .obligations)
+            self.feesAndPayments = try container.decode([Fee].self, forKey: .feesAndPayments)
+            self.termination = try container.decode(Termination.self, forKey: .termination)
+            self.confidentiality = try container.decode([Confidentiality].self, forKey: .confidentiality)
+            self.tips = try container.decode([Tip].self, forKey: .tips)
+            self.createdAt = (try? container.decode(Date.self, forKey: .createdAt)) ?? Date()
+
+        }
+        
+        // Add custom init for manual creation (for testing)
+    init(documentIdentifier: String,
+             summary: Summary,
+             obligations: [Obligation],
+             feesAndPayments: [Fee],
+             termination: Termination,
+             confidentiality: [Confidentiality],
+             tips: [Tip],
+             createdAt: Date = Date()) {
+            
+            self.id = UUID()
+            self.createdAt = createdAt
+            self.documentIdentifier = documentIdentifier
+            self.summary = summary
+            self.obligations = obligations
+            self.feesAndPayments = feesAndPayments
+            self.termination = termination
+            self.confidentiality = confidentiality
+            self.tips = tips
+        }
 
      //MARK: - Summary
      struct Summary: Codable {
@@ -282,12 +324,12 @@ struct ProcessedDocument: Codable {
 
 extension ProcessedDocument: Hashable {
     static func == (lhs: ProcessedDocument, rhs: ProcessedDocument) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+           lhs.id == rhs.id
+       }
+
+       func hash(into hasher: inout Hasher) {
+           hasher.combine(id)
+       }
 }
 
 // MARK: - Severity Display Helper
@@ -396,4 +438,9 @@ extension ProcessedDocument {
         default: return 0
         }
     }
+}
+
+
+extension Notification.Name {
+    static let didAddNewDocument = Notification.Name("didAddNewDocument")
 }

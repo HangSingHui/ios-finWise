@@ -10,6 +10,8 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
+
+    
     //Set dummy user d
     
     var user: User? {
@@ -17,6 +19,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             saveUser()
         }
     }
+    
+    /*
+     class AppDelegate: UIResponder, UIApplicationDelegate {
+         static var shared: AppDelegate { UIApplication.shared.delegate as! AppDelegate }
+         
+         var savedAnalysis: Set<ProcessedDocument> = []
+
+         func application(
+             _ application: UIApplication,
+             didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+         ) -> Bool {
+             // Load saved analysis on launch
+             savedAnalysis = DocumentManager.shared.loadSavedDocuments()
+             return true
+         }
+     }
+
+     */
     
     
     //Set variables for savedAnalysis
@@ -27,9 +47,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
         loadUser()
+        // Load saved analysis on launch
+        savedAnalysis = DocumentManager.shared.loadSavedDocuments()
         return true
     }
     
@@ -68,3 +92,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 }
 
+class DocumentManager {
+    static let shared = DocumentManager()
+    private let savedKey = "savedAnalysis"
+    
+    private init() {}
+    
+    func save(documents: Set<ProcessedDocument>) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(Array(documents))
+            UserDefaults.standard.set(data, forKey: savedKey)
+        } catch {
+            print("Failed to save documents: \(error)")
+        }
+    }
+    
+    func loadSavedDocuments() -> Set<ProcessedDocument> {
+        guard let data = UserDefaults.standard.data(forKey: savedKey) else { return [] }
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let array = try decoder.decode([ProcessedDocument].self, from: data)
+            return Set(array)
+        } catch {
+            print("Failed to load documents: \(error)")
+            return []
+        }
+    }
+}
