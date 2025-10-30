@@ -26,16 +26,22 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.largeTitleDisplayMode = .always
+
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        navigationItem.title = "Hello, \(user.name) 👋"
+        if let userName = user?.name {
+               let displayName = userName.count > 10 ? String(userName.prefix(10)) + "..." : userName
+               navigationItem.title = "Hello \(displayName) 👋"
+           } else {
+               navigationItem.title = "Hello there 👋"
+           }
         
         //Setup dummy data inside saved
         //Add dummy inside the saveddocuments
-        for doc in DummyDocuments.all {
-            savedDocuments.insert(doc)
-        }
-        
+//        for doc in DummyDocuments.all {
+//            savedDocuments.insert(doc)
+//        }
+//        
         setupBackground()
         setupImageAndDocumentPickers()
         setupNavigationBar()
