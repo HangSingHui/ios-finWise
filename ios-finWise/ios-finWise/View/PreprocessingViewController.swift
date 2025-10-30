@@ -199,7 +199,6 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         Commonly dealt with documents: \(user?.commonlyDealtWithDocuments ?? "None")
         """
         
-        // Capture pageImages before async operations
         let imagesToAnalyze = pageImages
         
         let analyserService = AnalyserService()
@@ -209,6 +208,10 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         loadingVC.onFinish = { [weak self] (result: ProcessedDocument) in
             DispatchQueue.main.async {
                 AppDelegate.shared.savedAnalysis.insert(result)
+                DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+                
+                // Post notification
+                NotificationCenter.default.post(name: NSNotification.Name("DocumentSaved"), object: nil)
                 
                 loadingVC.dismiss(animated: false) {
                     let resultsVC = ResultsViewController(analysis: result)
@@ -222,9 +225,8 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         present(loadingVC, animated: true) {
             Task {
                 do {
-                    // Use captured images instead of self.pageImages
                     let analysisResults = try await analyserService.analyzeDocument(
-                        documentImages: imagesToAnalyze,  // ✅ Fixed
+                        documentImages: imagesToAnalyze,
                         userProfile: userDetailsString
                     )
                     print("========= Printing analysis results")
@@ -353,3 +355,4 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
   
     
 }
+

@@ -38,6 +38,21 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         setupCollectionView()
         setupEmptyState()
         updateUI()
+        
+        NotificationCenter.default.addObserver(
+              self,
+              selector: #selector(documentWasSaved),
+              name: NSNotification.Name("DocumentSaved"),
+              object: nil
+          )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func documentWasSaved() {
+        refreshDocuments()
     }
     
     override func viewWillAppear(_ animated: Bool) {

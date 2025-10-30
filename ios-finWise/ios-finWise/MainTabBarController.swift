@@ -25,7 +25,7 @@ class MainTabBarController: UITabBarController{
         let homeNC = createNavigationController(for: homeVC)
         let settingsNC = createNavigationController(for: settingsVC)
         
-        self.viewControllers = [homeNC, settingsNC]
+        self.viewControllers = [homeNC]
     }
     
     private func createNavigationController(for rootViewController: UIViewController) -> UINavigationController{
