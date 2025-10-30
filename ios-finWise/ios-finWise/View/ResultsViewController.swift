@@ -9,6 +9,8 @@ import UIKit
 
 class ResultsViewController: UIViewController {
     
+    var onAnalysisSaved: (() -> Void)?
+    
     // MARK: - Properties
     let currentAnalysis: ProcessedDocument!
     var savedAnalysis = AppDelegate.shared.savedAnalysis
@@ -58,6 +60,9 @@ class ResultsViewController: UIViewController {
         setupBreakdownSection()
         setupLayout()
         updateCardsForCurrentSection()
+        
+        // Notify Home immediately
+        onAnalysisSaved?()
     }
     
     // MARK: - Setup Methods
@@ -82,14 +87,7 @@ class ResultsViewController: UIViewController {
         )
         navigationItem.leftBarButtonItem = homeButton
         
-        // Right bar buttons - Save and Share (always visible)
-        saveButton = UIBarButtonItem(
-            image: UIImage(systemName: "heart"),
-            style: .plain,
-            target: self,
-            action: #selector(toggleSave)
-        )
-        
+        // Only show share button on the right
         shareButton = UIBarButtonItem(
             image: UIImage(systemName: "square.and.arrow.up"),
             style: .plain,
@@ -97,8 +95,9 @@ class ResultsViewController: UIViewController {
             action: #selector(shareAnalysis)
         )
         
-        navigationItem.rightBarButtonItems = [shareButton, saveButton]
+        navigationItem.rightBarButtonItem = shareButton
     }
+
     
     private func setupScrollView() {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -480,25 +479,44 @@ class ResultsViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func returnToHome() {
-        if let nav = navigationController, nav.viewControllers.first != self {
-            // If we're inside a navigation stack, just pop to root
-            nav.popToRootViewController(animated: true)
+        // Check if we're in a modal presentation (from camera flow)
+        if presentingViewController != nil {
+            // We're presented modally, dismiss all the way
+            if let window = self.view.window,
+               let rootVC = window.rootViewController as? UITabBarController {
+                rootVC.dismiss(animated: true) {
+                    // Select home tab and refresh
+                    rootVC.selectedIndex = 0
+                    if let navVC = rootVC.viewControllers?.first as? UINavigationController,
+                       let homeVC = navVC.viewControllers.first as? HomeViewController {
+                        homeVC.refreshDocuments()
+                    }
+                }
+            } else {
+                self.view.window?.rootViewController?.dismiss(animated: true, completion: nil)
+            }
         } else {
-            // Otherwise, dismiss any modals
-            self.view.window?.rootViewController?.dismiss(animated: true, completion: nil)
+            // We're pushed on navigation stack, just pop back
+            navigationController?.popViewController(animated: true)
         }
     }
-    
     
     @objc private func toggleSave() {
         if savedAnalysis.contains(currentAnalysis) {
             savedAnalysis.remove(currentAnalysis)
-            saveButton.image = UIImage(systemName: "heart") // normal state
         } else {
             savedAnalysis.insert(currentAnalysis)
-            saveButton.image = UIImage(systemName: "heart.fill") // filled state
         }
+        AppDelegate.shared.savedAnalysis = savedAnalysis
+        
+        // Persist
+        DocumentManager.shared.save(documents: savedAnalysis)
+        
+        // Update button UI
+        updateSaveButtonState()
     }
+
+
     
     @objc private func shareAnalysis() {
         let shareText = """

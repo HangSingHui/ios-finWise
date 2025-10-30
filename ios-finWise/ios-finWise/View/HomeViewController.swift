@@ -5,63 +5,84 @@
 //  Created by Sing Hui Hang on 24/10/25.
 //
 
-
 import UIKit
 import UniformTypeIdentifiers
 
 class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIDocumentPickerDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
 
     let user = AppDelegate.shared.user
-    
-    var savedDocuments =  AppDelegate.shared.savedAnalysis
-    
+
     private var collectionView: UICollectionView!
     private var emptyStack: UIStackView!
+    private var titleLabel: UILabel!
     
     var imagePicker: UIImagePickerController!
     var documentPicker: UIDocumentPickerViewController!
-    var titleLabel: UILabel!
-    
+
+    // Use computed property to always reflect AppDelegate.shared.savedAnalysis
+    private var savedDocumentsArray: [ProcessedDocument] {
+        return Array(AppDelegate.shared.savedAnalysis).sorted { $0.createdAt < $1.createdAt }
+    }
+
+
     // MARK: - View Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.largeTitleDisplayMode = .always
-
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        if let userName = user?.name {
-               let displayName = userName.count > 10 ? String(userName.prefix(10)) + "..." : userName
-               navigationItem.title = "Hello \(displayName) 👋"
-           } else {
-               navigationItem.title = "Hello there 👋"
-           }
-        
-        //Setup dummy data inside saved
-        //Add dummy inside the saveddocuments
-//        for doc in DummyDocuments.all {
-//            savedDocuments.insert(doc)
-//        }
-//        
+        setupNavigationBarTitle()
         setupBackground()
         setupImageAndDocumentPickers()
         setupNavigationBar()
         setupCollectionView()
         setupEmptyState()
         updateUI()
+        
+        NotificationCenter.default.addObserver(
+              self,
+              selector: #selector(documentWasSaved),
+              name: NSNotification.Name("DocumentSaved"),
+              object: nil
+          )
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func documentWasSaved() {
+        refreshDocuments()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Reload collectionView to reflect any new saved analysis
+        collectionView.reloadData()
+        updateUI()
+    }
+
+
     // MARK: - Navigation Bar
+    private func setupNavigationBarTitle() {
+        if let userName = user?.name {
+            let displayName = userName.count > 10 ? String(userName.prefix(10)) + "..." : userName
+            navigationItem.title = "Hello \(displayName) 👋"
+        } else {
+            navigationItem.title = "Hello there 👋"
+        }
+    }
+    
     private func setupNavigationBar() {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "plus"),
             menu: UIMenu(children: [
                 UIAction(title:"Camera", image: UIImage(systemName: "camera")){ [weak self] _ in self?.uploadByCamera() },
-                UIAction(title:"Upload Docs", image: UIImage(systemName: "filemenu.and.pointer.arrow")){ [weak self] _ in self?.uploadByFile() }
+//                UIAction(title:"Upload Docs", image: UIImage(systemName: "filemenu.and.pointer.arrow")){ [weak self] _ in self?.uploadByFile() }
             ])
         )
     }
 
-    
     // MARK: - Image / Document Picker
     private func setupImageAndDocumentPickers() {
         imagePicker = UIImagePickerController()
@@ -73,7 +94,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
         documentPicker.delegate = self
     }
-    
+
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         guard let image = info[.originalImage] as? UIImage else { return }
@@ -90,7 +111,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         navController.isModalInPresentation = true
         present(navController, animated: true)
     }
-    
+
     @objc func uploadByCamera() {
         present(imagePicker, animated: true)
     }
@@ -98,7 +119,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     @objc func uploadByFile() {
         present(documentPicker, animated: true)
     }
-    
+
     // MARK: - Collection View
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
@@ -114,8 +135,7 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.register(HomeListViewCell.self, forCellWithReuseIdentifier: HomeListViewCell.identifier)
         
-        
-        //Add title
+        // Add title
         titleLabel = UILabel()
         titleLabel.text = "Your Past Analysis"
         titleLabel.textColor = .gray
@@ -128,28 +148,139 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-           titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
             collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        savedDocuments.count
+        return savedDocumentsArray.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HomeListViewCell.identifier, for: indexPath) as! HomeListViewCell
-        let doc = DummyDocuments.all[indexPath.item]
+        let doc = savedDocumentsArray[indexPath.item]
         cell.configure(with: doc)
         cell.delegate = self
         return cell
     }
     
+    // MARK: - Swipe Actions
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let document = savedDocumentsArray[indexPath.item]
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            // Rename action
+            let renameAction = UIAction(
+                title: "Rename",
+                image: UIImage(systemName: "pencil")
+            ) { [weak self] _ in
+                self?.showRenameAlert(for: document, at: indexPath)
+            }
+            
+            // Delete action
+            let deleteAction = UIAction(
+                title: "Delete",
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.deleteDocument(at: indexPath)
+            }
+            
+            return UIMenu(title: document.documentIdentifier, children: [renameAction, deleteAction])
+        }
+    }
+
+    private func showRenameAlert(for document: ProcessedDocument, at indexPath: IndexPath) {
+        let alert = UIAlertController(
+            title: "Rename Document",
+            message: "Enter a new name for this document",
+            preferredStyle: .alert
+        )
+        
+        alert.addTextField { textField in
+            textField.text = document.documentIdentifier
+            textField.placeholder = "Document name"
+            textField.autocapitalizationType = .words
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self, weak alert] _ in
+            guard let newName = alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !newName.isEmpty else {
+                return
+            }
+            
+            self?.renameDocument(document, to: newName, at: indexPath)
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(saveAction)
+        
+        present(alert, animated: true)
+    }
+
+    private func renameDocument(_ document: ProcessedDocument, to newName: String, at indexPath: IndexPath) {
+        // Remove old document
+        AppDelegate.shared.savedAnalysis.remove(document)
+        
+        // Create updated document with new name
+        var updatedDocument = document
+        updatedDocument.documentIdentifier = newName
+        
+        // Add updated document
+        AppDelegate.shared.savedAnalysis.insert(updatedDocument)
+        
+        // Save to persistence
+        DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+        
+        // Reload the specific cell
+        collectionView.reloadItems(at: [indexPath])
+    }
+
+    private func deleteDocument(at indexPath: IndexPath) {
+        let document = savedDocumentsArray[indexPath.item]
+        
+        // Show confirmation alert
+        let alert = UIAlertController(
+            title: "Delete Document",
+            message: "Are you sure you want to delete '\(document.documentIdentifier)'? This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            // Remove from saved analysis
+            AppDelegate.shared.savedAnalysis.remove(document)
+            
+            // Save to persistence
+            DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+            
+            // Animate removal
+            self?.collectionView.performBatchUpdates({
+                self?.collectionView.deleteItems(at: [indexPath])
+            }, completion: { _ in
+                self?.updateUI()
+            })
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(deleteAction)
+        
+        present(alert, animated: true)
+    }
+
+    func refreshDocuments() {
+        collectionView.reloadData()
+        updateUI()
+    }
+
     // MARK: - Empty State
     private func setupEmptyState() {
         emptyStack = UIStackView()
@@ -191,12 +322,12 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
     }
     
     private func updateUI() {
-        let hasDocs = savedDocuments.count > 0
+        let hasDocs = !AppDelegate.shared.savedAnalysis.isEmpty
         collectionView.isHidden = !hasDocs
         titleLabel.isHidden = !hasDocs
         emptyStack.isHidden = hasDocs
     }
-    
+
     // MARK: - Background Gradient
     private func setupBackground() {
         let gradientView = GradientView()
@@ -212,8 +343,18 @@ extension HomeViewController: HomeListViewCellDelegate {
     func homeListCellDidSelect(document: ProcessedDocument) {
         let resultVC = ResultsViewController(analysis: document)
         resultVC.hidesBottomBarWhenPushed = true
+        
+        // Set callback to refresh collection view immediately
+        resultVC.onAnalysisSaved = { [weak self] in
+            self?.collectionView.reloadData()
+            self?.updateUI()
+        }
+        
         navigationController?.pushViewController(resultVC, animated: true)
     }
+    
+    
+
 }
 
 #Preview{

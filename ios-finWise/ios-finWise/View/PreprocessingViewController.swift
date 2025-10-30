@@ -25,6 +25,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     var titleLabel: UITextField!
 
 
+
     
     init(documentImage: UIImage){
         pageImages.append(documentImage)
@@ -123,6 +124,8 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         titleLabel.leftViewMode = .always
         titleLabel.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         titleLabel.rightViewMode = .always
+        
+        titleLabel.isHidden = true
        
     }
     
@@ -188,72 +191,7 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     }
     
     @objc func handleGenerate() {
-        let dummySummary = ProcessedDocument.Summary(
-            documentType: "Personal Loan Agreement",
-            purpose: "This loan agreement provides financing for personal use with a fixed interest rate of 5% per annum. The borrower agrees to repay the principal amount plus interest over a 12-month period through monthly installments.",
-            parties: ["John Doe (Borrower)", "ABC Bank Ltd (Lender)"],
-            duration: "12 months (1 Jan 2024 - 31 Dec 2024)",
-            keyDates: ["Loan Start: 1 Jan 2024"],
-            mainPoints: ["Total loan amount: $6,000"],
-            limitations: ["No early withdrawal without penalty"],
-            topThreeThings: [
-                "Pay on time to avoid $50 late fees",
-                "Early exit costs $200 penalty",
-                "You have 7 days to cancel without penalty"
-            ]
-        )
-        
-        let dummyDocument = ProcessedDocument(
-            documentIdentifier: "Policy456",
-            summary: dummySummary,
-            obligations: [
-                ProcessedDocument.Obligation(
-                    item: "Monthly payment",
-                    critical: true,
-                    deadline: nil,
-                    penaltyForNonCompliance: nil,
-                    severity: .medium
-                )
-            ],
-            feesAndPayments: [
-                ProcessedDocument.Fee(
-                    type: "recurring",
-                    amount: "$100",
-                    description: "Monthly fee",
-                    frequency: "monthly",
-                    dueDate: nil,
-                    latePenalty: nil,
-                    severity: .medium
-                )
-            ],
-            termination: ProcessedDocument.Termination(
-                howToTerminate: nil,
-                noticePeriod: nil,
-                terminationFees: [],
-                refundPolicy: nil,
-                autoRenewal: nil,
-                coolingOffPeriod: nil,
-                postTerminationObligations: [],
-                severity: .low
-            ),
-            confidentiality: [],
-            tips: [
-                ProcessedDocument.Tip(
-                    category: "save_money",
-                    title: "Set up autopay",
-                    description: "Save on fees",
-                    actionRequired: true,
-                    deadline: nil,
-                    reference: "Clause 4",
-                    severity: .low
-                )
-            ]
-        )
-        
-        guard !pageImages.isEmpty else {
-            // show alert if no images
-            return
-        }
+        guard !pageImages.isEmpty else { return }
         
         let userDetailsString = """
         User Age Range: \(user?.ageGroup ?? ""),
@@ -261,19 +199,22 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         Commonly dealt with documents: \(user?.commonlyDealtWithDocuments ?? "None")
         """
         
-        let analyserService = AnalyserService(documentImages: pageImages)
+        let imagesToAnalyze = pageImages
         
-        // Create loading VC
+        let analyserService = AnalyserService()
         let loadingVC = AnimationViewController()
         loadingVC.modalPresentationStyle = .fullScreen
         
-        // Define what happens when loading finishes
-        loadingVC.onFinish = { [weak self] _ in
+        loadingVC.onFinish = { [weak self] (result: ProcessedDocument) in
             DispatchQueue.main.async {
-                // First dismiss the loading VC
+                AppDelegate.shared.savedAnalysis.insert(result)
+                DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+                
+                // Post notification
+                NotificationCenter.default.post(name: NSNotification.Name("DocumentSaved"), object: nil)
+                
                 loadingVC.dismiss(animated: false) {
-                    // Then push results VC
-                    let resultsVC = ResultsViewController(analysis: dummyDocument)
+                    let resultsVC = ResultsViewController(analysis: result)
                     let navVC = UINavigationController(rootViewController: resultsVC)
                     navVC.modalPresentationStyle = .fullScreen
                     self?.present(navVC, animated: true)
@@ -281,26 +222,26 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
             }
         }
         
-
-        // Present loading screen immediately
         present(loadingVC, animated: true) {
-            // Run async analysis in background once loading VC is on screen
             Task {
                 do {
-                    let analysisResults = try await analyserService.respond(to: userDetailsString)
+                    let analysisResults = try await analyserService.analyzeDocument(
+                        documentImages: imagesToAnalyze,
+                        userProfile: userDetailsString
+                    )
+                    print("========= Printing analysis results")
                     print(analysisResults)
                     
-                    // When done, tell loading VC to finish
                     loadingVC.onFinish?(analysisResults)
                     
                 } catch {
                     print("Error during analysis: \(error)")
-                    
-                    // Optionally show error in results VC or alert
-                    loadingVC.onFinish?("Error: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        loadingVC.dismiss(animated: true) {
+                            // TODO: Show error alert to user
+                        }
+                    }
                 }
-                
-            
             }
         }
     }
@@ -415,7 +356,3 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
     
 }
 
-//#Preview {
-//    PreprocessingViewController(documentImage: UIImage(systemName: "folder")!)
-//}
-//

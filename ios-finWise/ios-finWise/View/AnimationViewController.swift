@@ -31,7 +31,8 @@ class AnimationViewController: UIViewController {
     
     private var timer: Timer?
     
-    var onFinish: ((String) -> Void)? // Completion handler
+    // In AnimationViewController.swift
+    var onFinish: ((ProcessedDocument) -> Void)?  // Change from String to ProcessedDocument
 
     
     let loadingText = [
