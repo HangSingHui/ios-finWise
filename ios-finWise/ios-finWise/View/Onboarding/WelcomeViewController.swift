@@ -93,15 +93,16 @@ class WelcomeViewController: UIViewController{
         // Bounce animation
         UIView.animate(withDuration: 0.1,
                        animations: {
-                           sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-                       }, completion: { _ in
-                           UIView.animate(withDuration: 0.1) {
-                               sender.transform = .identity
-                           }
-                       })
+            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }, completion: { _ in
+            UIView.animate(withDuration: 0.1) {
+                sender.transform = .identity
+            }
+        })
         
-        // Your existing action
-//        toggleToQuestionnaire()
+        let questionnaireVC = QuestionnaireViewController()
+        questionnaireVC.modalPresentationStyle = .fullScreen
+        present(questionnaireVC, animated: true)
     }
 
     
