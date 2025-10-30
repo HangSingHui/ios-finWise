@@ -9,7 +9,7 @@ import UIKit
 struct ProcessedDocument: Codable {
     let id: UUID  // Remove the default value assignment
     let createdAt: Date
-    let documentIdentifier: String
+    var documentIdentifier: String
     let summary: Summary
     let obligations: [Obligation]
     let feesAndPayments: [Fee]

@@ -168,6 +168,113 @@ class HomeViewController: UIViewController, UIImagePickerControllerDelegate, UIN
         cell.delegate = self
         return cell
     }
+    
+    // MARK: - Swipe Actions
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let document = savedDocumentsArray[indexPath.item]
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            // Rename action
+            let renameAction = UIAction(
+                title: "Rename",
+                image: UIImage(systemName: "pencil")
+            ) { [weak self] _ in
+                self?.showRenameAlert(for: document, at: indexPath)
+            }
+            
+            // Delete action
+            let deleteAction = UIAction(
+                title: "Delete",
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.deleteDocument(at: indexPath)
+            }
+            
+            return UIMenu(title: document.documentIdentifier, children: [renameAction, deleteAction])
+        }
+    }
+
+    private func showRenameAlert(for document: ProcessedDocument, at indexPath: IndexPath) {
+        let alert = UIAlertController(
+            title: "Rename Document",
+            message: "Enter a new name for this document",
+            preferredStyle: .alert
+        )
+        
+        alert.addTextField { textField in
+            textField.text = document.documentIdentifier
+            textField.placeholder = "Document name"
+            textField.autocapitalizationType = .words
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        let saveAction = UIAlertAction(title: "Save", style: .default) { [weak self, weak alert] _ in
+            guard let newName = alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !newName.isEmpty else {
+                return
+            }
+            
+            self?.renameDocument(document, to: newName, at: indexPath)
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(saveAction)
+        
+        present(alert, animated: true)
+    }
+
+    private func renameDocument(_ document: ProcessedDocument, to newName: String, at indexPath: IndexPath) {
+        // Remove old document
+        AppDelegate.shared.savedAnalysis.remove(document)
+        
+        // Create updated document with new name
+        var updatedDocument = document
+        updatedDocument.documentIdentifier = newName
+        
+        // Add updated document
+        AppDelegate.shared.savedAnalysis.insert(updatedDocument)
+        
+        // Save to persistence
+        DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+        
+        // Reload the specific cell
+        collectionView.reloadItems(at: [indexPath])
+    }
+
+    private func deleteDocument(at indexPath: IndexPath) {
+        let document = savedDocumentsArray[indexPath.item]
+        
+        // Show confirmation alert
+        let alert = UIAlertController(
+            title: "Delete Document",
+            message: "Are you sure you want to delete '\(document.documentIdentifier)'? This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            // Remove from saved analysis
+            AppDelegate.shared.savedAnalysis.remove(document)
+            
+            // Save to persistence
+            DocumentManager.shared.save(documents: AppDelegate.shared.savedAnalysis)
+            
+            // Animate removal
+            self?.collectionView.performBatchUpdates({
+                self?.collectionView.deleteItems(at: [indexPath])
+            }, completion: { _ in
+                self?.updateUI()
+            })
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(deleteAction)
+        
+        present(alert, animated: true)
+    }
 
     func refreshDocuments() {
         collectionView.reloadData()
@@ -245,6 +352,8 @@ extension HomeViewController: HomeListViewCellDelegate {
         
         navigationController?.pushViewController(resultVC, animated: true)
     }
+    
+    
 
 }
 
