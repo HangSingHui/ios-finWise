@@ -8,7 +8,7 @@
 import UIKit
 
 class QuestionnaireViewController: UIViewController {
-
+    
     //Global variable to track which question the user is on
     var currQuestion: Int = 1
     
@@ -20,8 +20,6 @@ class QuestionnaireViewController: UIViewController {
         "Name": ""
     ]
     
-    //Create a new user object
-    var user: User?
     
     //TODO: Put into view later
     var question1: UIView?
@@ -60,7 +58,7 @@ class QuestionnaireViewController: UIViewController {
         ("creditcard.fill", "Credit Cards / Personal Banking", "Banking agreements, credit card terms, fees, T&Cs"),
         ("chart.line.uptrend.xyaxis", "Investments", "SGX stocks, ETFs, CPF investments"),
         ("scale.3d", "Other Financial Services", "Subscriptions, loans, or miscellaneous agreements"),
-      
+        
     ] //Icon, title, description
     
     var subtitle = UILabel()
@@ -70,6 +68,11 @@ class QuestionnaireViewController: UIViewController {
     //Question4 variables
     var nameTextField = UITextField()
     var textFieldContainer = UIView()
+    let funnyDefaultNames = [
+        "Mystery Boi",
+        "Nameless Chad",
+        "Jasper The Ghost"
+    ]
     
     override func viewDidLoad() {
         super.viewDidLoad( )
@@ -79,7 +82,7 @@ class QuestionnaireViewController: UIViewController {
         setupLayout()
         setupQuestion1()
         setupButton()
-    
+        
     }
     
     func setupButton(){
@@ -104,7 +107,7 @@ class QuestionnaireViewController: UIViewController {
         nextButton.layer.shadowOpacity = 0.25
         nextButton.layer.shadowOffset = CGSize(width: 0, height: 4)
         nextButton.layer.shadowRadius = 6
-
+        
         nextButton.isHidden = true
         
         // Add this line here:
@@ -117,8 +120,8 @@ class QuestionnaireViewController: UIViewController {
         //Reset
         questionLabel.text = ""
         for card in question1Options {
-                  card.removeFromSuperview()
-              }
+            card.removeFromSuperview()
+        }
         question1Options.removeAll()
     }
     
@@ -153,22 +156,22 @@ class QuestionnaireViewController: UIViewController {
     
     func setupLayout(){
         view.backgroundColor = .white
-
-       stack.axis = .vertical
-       stack.spacing = 12
-       stack.translatesAutoresizingMaskIntoConstraints = false
-
-       view.addSubview(stack)
-       stack.addArrangedSubview(questionLabel)
-       //stack.addArrangedSubview(nextButton)
-
-       NSLayoutConstraint.activate([
-           stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-           stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-           stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-           
-       ])
-    
+        
+        stack.axis = .vertical
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(stack)
+        stack.addArrangedSubview(questionLabel)
+        //stack.addArrangedSubview(nextButton)
+        
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            
+        ])
+        
     }
     
     //MARK: Set Up Questions
@@ -176,7 +179,7 @@ class QuestionnaireViewController: UIViewController {
         //Set the question
         questionLabel.text = "Which age group do you belong in?"
         questionLabel.font = .systemFont(ofSize: 20, weight: .medium)
-    
+        
         //Containers
         for (age, details) in ageGroup {
             let question1Card = createCard(title: age, iconName: details[0], description: details[1])
@@ -188,7 +191,7 @@ class QuestionnaireViewController: UIViewController {
             question1Card.addGestureRecognizer(tap)
             stack.addArrangedSubview(question1Card)
         }
-
+        
     }
     
     func setupQuestion2(){
@@ -196,7 +199,7 @@ class QuestionnaireViewController: UIViewController {
         questionLabel.text = "How comfortable are you with financial documents?"
         questionLabel.font = .systemFont(ofSize: 20, weight: .medium)
         questionLabel.numberOfLines = 0
-
+        
         //Configure slider
         slider.minimumValue = 0
         slider.maximumValue = 4
@@ -217,9 +220,9 @@ class QuestionnaireViewController: UIViewController {
         maxLabel.textColor = .secondaryLabel
         
         let labelStack = UIStackView(arrangedSubviews: [minLabel, maxLabel])
-          labelStack.axis = .horizontal
-          labelStack.distribution = .equalSpacing
-          
+        labelStack.axis = .horizontal
+        labelStack.distribution = .equalSpacing
+        
         stack.addArrangedSubview(labelStack)
         
         //Configure on change slider
@@ -284,12 +287,12 @@ class QuestionnaireViewController: UIViewController {
             textFieldContainer.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
-
+    
     
     @objc func commonDocCardSelected(_ sender: UITapGestureRecognizer){
         guard let selectedCard = sender.view else { return}
         let identifier = selectedCard.accessibilityIdentifier ?? ""
-      
+        
         //Check if its inside the
         if selectedCommonDocuments.contains(identifier){
             //remove and uncolor
@@ -315,7 +318,7 @@ class QuestionnaireViewController: UIViewController {
         }
     }
     
-
+    
     
     @objc func sliderValueChanged(_ sender: UISlider){
         let roundedValue = Int(sender.value)
@@ -333,7 +336,7 @@ class QuestionnaireViewController: UIViewController {
         card.layer.cornerRadius = 12
         card.layer.shadowOpacity = 0
         card.translatesAutoresizingMaskIntoConstraints = false
-       
+        
         
         let iconImageView = UIImageView()
         iconImageView.image = UIImage(systemName: iconName)
@@ -351,11 +354,11 @@ class QuestionnaireViewController: UIViewController {
         card.accessibilityIdentifier =  "\(title): \(description)"
         
         let descriptionLabel = UILabel()
-       descriptionLabel.text = description
-       descriptionLabel.font = .systemFont(ofSize: 14)
-       descriptionLabel.textColor = .secondaryLabel
-       descriptionLabel.numberOfLines = 0
-       descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.text = description
+        descriptionLabel.font = .systemFont(ofSize: 14)
+        descriptionLabel.textColor = .secondaryLabel
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         
         card.addSubview(iconImageView)
         card.addSubview(titleLabel)
@@ -364,44 +367,44 @@ class QuestionnaireViewController: UIViewController {
         //Setup constraints
         NSLayoutConstraint.activate([
             card.heightAnchor.constraint(greaterThanOrEqualToConstant: 90),
-
+            
             // Icon left
             iconImageView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
             iconImageView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
             iconImageView.widthAnchor.constraint(equalToConstant: 28),
             iconImageView.heightAnchor.constraint(equalToConstant: 28),
-
+            
             // Title to the right of icon
             titleLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 12),
             titleLabel.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
             titleLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
-
+            
             // Description below title
             descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             descriptionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
             descriptionLabel.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
-                    
-          ])
+            
+        ])
         
-     
+        
         
         return card
-
+        
     }
     
     @objc func ageCardSelected(_ sender: UITapGestureRecognizer){
         guard let selectedCard = sender.view else { return }
-    
+        
         
         if hasSelectedAgeGroup{
             //Iterate through the cards and check wheterh their color has been changed
             //Change all the card background to white first
             for card in question1Options{
                 if card != selectedCard {
-                       card.backgroundColor = .white
-                       card.layer.shadowOpacity = 0
-               }
+                    card.backgroundColor = .white
+                    card.layer.shadowOpacity = 0
+                }
             }
         }
         //Change the color of the selected card to secondary
@@ -415,23 +418,23 @@ class QuestionnaireViewController: UIViewController {
             selectedCard.layer.masksToBounds = false
             self.view.layoutIfNeeded()
         }
-
+        
         hasSelectedAgeGroup = true
         selectedAgeGroup = selectedCard.accessibilityIdentifier ?? ""
         nextButton.isHidden  = false
         
-    
+        
     }
     
     @objc func nextButtonTapped(_ sender: UIButton){
         UIView.animate(withDuration: 0.1,
-           animations: {
-               sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-           }, completion: { _ in
-               UIView.animate(withDuration: 0.1) {
-                   sender.transform = .identity
-               }
-           })
+                       animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }, completion: { _ in
+            UIView.animate(withDuration: 0.1) {
+                sender.transform = .identity
+            }
+        })
         
         if currQuestion == 1 {
             userPrefs["Age Group"] = selectedAgeGroup
@@ -459,18 +462,63 @@ class QuestionnaireViewController: UIViewController {
         
         else if currQuestion == 4 {
             //set user prefs and direct them to the main page
-            userPrefs["Name"] = nameTextField.text ?? "John AppleSeed"
-            print("final user prefs", userPrefs)
+            if nameTextField.text == "" {
+                let randomIndex = Int.random(in: 0..<funnyDefaultNames.count)
+                userPrefs["Name"] = funnyDefaultNames[randomIndex]
+            } else {
+                userPrefs["Name"] = nameTextField.text
+            }
             
-            //Async - to create user profile, place in shared so it doesnt get deleted unless use deletes app
-            //Give a loading page of 7 seconds
-            
-            //direct user to main page
-            
+            //Set async to setup user to app delegate memory and place loading page
+            Task {
+                // Safely unwrap all required values
+                guard let name = userPrefs["Name"],
+                      let ageGroup = userPrefs["Age Group"],
+                      let literacyLevel = userPrefs["Comfort Level"],
+                      let documents = userPrefs["Commonly Read Documents"] else {
+                    print("Error: Missing required user preferences")
+                    return
+                }
+                
+                //Create user
+                let newUser = User(
+                    name: name,
+                    ageGroup: ageGroup,
+                    literacyLevel: literacyLevel,
+                    commonlyDealtWithDocuments: documents
+                )
+                
+                
+                //Set user to app delegate user
+                AppDelegate.shared.user = newUser
+                
+                // Direct user to the main page
+                await MainActor.run {
+                    self.dismiss(animated: true) {
+                        // After dismissing, set HomeViewController as root
+                        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                              let window = windowScene.windows.first else {
+                            return
+                        }
+                        
+                        let homeVC = HomeViewController()
+                        let navController = UINavigationController(rootViewController: homeVC)
+                        
+                        //Smoother transition
+                        UIView.transition(with: window,
+                                             duration: 0.3,
+                                             options: .transitionCrossDissolve,
+                                             animations: {
+                               window.rootViewController = navController
+                           }, completion: nil)
+                    }
+                    
+                }
+                
+            }
         }
+        
     }
-
-
 }
 
 #Preview {

@@ -256,9 +256,9 @@ class PreprocessingViewController: UIViewController, UICollectionViewDataSource,
         }
         
         let userDetailsString = """
-        User Age Range: \(user.ageGroup),
-        Financial literacy level: \(user.literacyLevel),
-        Commonly dealt with documents: \(user.commonlyDealtWithDocuments?.joined(separator: ", ") ?? "None")
+        User Age Range: \(user?.ageGroup ?? ""),
+        Financial literacy level: \(user?.literacyLevel ?? ""),
+        Commonly dealt with documents: \(user?.commonlyDealtWithDocuments ?? "None")
         """
         
         let analyserService = AnalyserService(documentImages: pageImages)
