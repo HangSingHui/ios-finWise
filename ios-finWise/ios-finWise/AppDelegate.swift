@@ -12,7 +12,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     //Set dummy user d
     
-    var user: User? = nil
+    var user: User? {
+        didSet {
+            saveUser()
+        }
+    }
     
     
     //Set variables for savedAnalysis
@@ -25,8 +29,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        loadUser()
         return true
     }
+    
+    private func saveUser() {
+           guard let user = user else {
+               UserDefaults.standard.removeObject(forKey: "savedUser")
+               return
+           }
+           
+           if let encoded = try? JSONEncoder().encode(user) {
+               UserDefaults.standard.set(encoded, forKey: "savedUser")
+           }
+    }
+    
+    private func loadUser() {
+           if let savedData = UserDefaults.standard.data(forKey: "savedUser"),
+              let decoded = try? JSONDecoder().decode(User.self, from: savedData) {
+               user = decoded
+           }
+       }
 
     // MARK: UISceneSession Lifecycle
 

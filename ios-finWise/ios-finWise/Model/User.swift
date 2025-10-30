@@ -5,7 +5,7 @@
 //  Created by Sing Hui Hang on 24/10/25.
 //
 
-struct User{
+struct User: Codable{
     //Add more details later
     let name: String
     

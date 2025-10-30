@@ -286,8 +286,16 @@ class QuestionnaireViewController: UIViewController {
         NSLayoutConstraint.activate([
             textFieldContainer.heightAnchor.constraint(equalToConstant: 50)
         ])
+        
+        // Add tap gesture to dismiss keyboard
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false // Allow other touches to work
+        view.addGestureRecognizer(tapGesture)
     }
-    
+
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
+    }
     
     @objc func commonDocCardSelected(_ sender: UITapGestureRecognizer){
         guard let selectedCard = sender.view else { return}
@@ -494,25 +502,20 @@ class QuestionnaireViewController: UIViewController {
                 
                 // Direct user to the main page
                 await MainActor.run {
-                    self.dismiss(animated: true) {
-                        // After dismissing, set HomeViewController as root
-                        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                              let window = windowScene.windows.first else {
-                            return
-                        }
-                        
-                        let homeVC = HomeViewController()
-                        let navController = UINavigationController(rootViewController: homeVC)
-                        
-                        //Smoother transition
-                        UIView.transition(with: window,
-                                             duration: 0.3,
-                                             options: .transitionCrossDissolve,
-                                             animations: {
-                               window.rootViewController = navController
-                           }, completion: nil)
+                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                          let window = windowScene.windows.first else {
+                        return
                     }
                     
+                    let mainTabBar = MainTabBarController()
+                    
+                    // Add smooth transition
+                    UIView.transition(with: window,
+                                      duration: 0.3,
+                                      options: .transitionCrossDissolve,
+                                      animations: {
+                        window.rootViewController = mainTabBar
+                    }, completion: nil)
                 }
                 
             }
