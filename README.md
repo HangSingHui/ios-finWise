@@ -12,12 +12,6 @@ finWise is a native iOS prototype that helps users take photos of contracts and 
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
 - [Configuration (API keys & run-time secrets)](#configuration-api-keys--run-time-secrets)
-- [Architecture & project structure](#architecture--project-structure)
-- [Data & processing](#data--processing)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [Roadmap](#roadmap)
-- [License](#license)
 - [Contact](#contact)
 
 ## Key features
@@ -27,7 +21,6 @@ finWise is a native iOS prototype that helps users take photos of contracts and 
 - Plain-language explanations: translates legal/financial phrasing into simple summaries.
 - Personalized advice and risk scoring based on the user's assessed financial literacy level.
 - Onboarding literacy assessment: quick quiz at first launch to set explanation depth and action recommendations.
-- Export/share analyzed report (PDF or text) and optional CSV output for records.
 
 ## How it works (high level)
 1. User completes a short in-app literacy assessment on first launch.
@@ -45,25 +38,11 @@ finWise is a native iOS prototype that helps users take photos of contracts and 
 - Main screen
   - Camera / Upload -> Capture -> Processing / Analysis -> Annotated report -> Save / Share
 
-## Privacy & security
-Protecting user data and sensitive documents is critical:
-- Local processing: where possible, run OCR and analysis on-device (Vision + CoreML) to avoid sending images off-device.
-- If server-side processing is used, all uploads must be encrypted in transit (HTTPS/TLS) and deleted after processing unless explicit consent is given.
-- Provide a clear consent screen before uploading documents for external processing.
-- Store minimal user metadata. Avoid storing full contract images unless user explicitly saves them.
-- Add an in-app Privacy Policy describing data handling and retention.
-
-Include any legal/compliance notes here (GDPR, CCPA) depending on target users.
-
 ## Requirements
 - Development: Xcode 14/15+ (adjust to the Xcode version you support)
 - Language: Swift (refer to repository for exact Swift version)
 - Minimum iOS: iOS 15+ (adjust according to project settings)
 - Dependency manager: Swift Package Manager (SPM)
-- Recommended frameworks:
-  - Vision (OCR)
-  - NaturalLanguage / CoreML for on-device NLP and models
-  - AVFoundation / UIImagePicker for capture
 
 ## Getting started
 
@@ -101,7 +80,7 @@ Recommended steps to add an API key to your local Run scheme:
 3. Select the "Arguments" tab.
 4. In the "Environment Variables" section click the "+" button.
 5. Add a variable name and value. Recommended variable name:
-   - FINWISE_API_KEY = <your-api-key>
+   - OPENAI_API_KEY = <your-api-key>
 6. Ensure the checkbox next to the variable is checked so it will be available at runtime.
 7. Close the scheme editor and run the app.
 
@@ -115,30 +94,6 @@ Security notes:
 - For CI/automation, configure secrets in your CI provider's secret store instead of committing keys.
 - For production, prefer secure storage (Keychain, Secret Manager) and short-lived tokens; treat environment variables as local developer convenience only.
 
-If you prefer a different approach (xcconfig, Keychain, encrypted plist, or a secrets manager), add instructions here and provide Config.example files for developers.
-
-## Architecture & project structure
-(Adjust to match actual repository layout — this is a recommended layout.)
-
-- App/
-  - App entrypoint and routing
-- Modules/
-  - Capture: camera screens and image picking
-  - OCR: image preprocessing and text extraction
-  - Parser: contract clause detection and entity extraction
-  - Analysis: plain-language generation, scoring, and recommendations
-  - Onboarding: literacy assessment
-  - Storage: local persistence and export
-- Models/ — domain models (Contract, Clause, UserProfile, LiteracyProfile)
-- Views/ & ViewModels/ — UI and MVVM bindings (if used)
-- Resources/ — assets, sample images, PDFs
-- Tests/ — unit and UI tests
-
-## Data & processing
-- OCR: Prefer Vision framework for image-to-text on-device.
-- NLP / Parsing: Use NaturalLanguage framework or lightweight CoreML models to detect clause types and extract entities.
-- Personalization: Store literacy level and adjust response templates. Keep templates localized and auditable.
-- Export: PDF writer or simple text/PDF export for annotated reports.
 
 ## Contact
 Maintainer: HangSingHui  
